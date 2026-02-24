@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Utensils, Mail, Lock, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store';
 import { authAPI } from '../api';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('restaurant1@foodrescue.in');
   const [password, setPassword] = useState('demo123');
   const [showPassword, setShowPassword] = useState(false);
@@ -50,13 +52,13 @@ export default function LoginPage() {
                 <Utensils className="w-6 h-6 text-white" />
               </div>
             </Link>
-            <h1 className="text-2xl font-bold font-display text-white">Welcome Back</h1>
-            <p className="text-slate-400 mt-1 text-sm">Sign in to Food Rescue Platform</p>
+            <h1 className="text-2xl font-bold font-display text-white">{t('auth.loginTitle')}</h1>
+            <p className="text-slate-400 mt-1 text-sm">{t('auth.loginSubtitle')}</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="text-sm font-medium text-slate-300 mb-1.5 block">Email</label>
+              <label className="text-sm font-medium text-slate-300 mb-1.5 block">{t('auth.email')}</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
@@ -71,7 +73,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-300 mb-1.5 block">Password</label>
+              <label className="text-sm font-medium text-slate-300 mb-1.5 block">{t('auth.password')}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
@@ -101,7 +103,7 @@ export default function LoginPage() {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  Sign In
+                  {t('auth.signIn')}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -112,7 +114,7 @@ export default function LoginPage() {
           <div className="mt-6 p-4 rounded-xl bg-green-500/5 border border-green-500/10">
             <div className="flex items-center gap-2 text-green-400 text-xs font-semibold mb-2">
               <Sparkles className="w-3 h-3" />
-              Demo Credentials
+              {t('auth.demoCreds')}
             </div>
             <div className="space-y-1 text-xs text-slate-400">
               <p><span className="text-slate-300">Restaurant:</span> restaurant1@foodrescue.in / demo123</p>
@@ -123,9 +125,9 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-sm text-slate-500 mt-6">
-            Don't have an account?{' '}
+            {t('auth.noAccount')}{' '}
             <Link to="/register" className="text-green-400 hover:text-green-300 font-medium">
-              Register here
+              {t('nav.register')}
             </Link>
           </p>
         </div>

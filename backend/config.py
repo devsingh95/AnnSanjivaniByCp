@@ -53,11 +53,21 @@ class Settings(BaseSettings):
     MAX_WEBSOCKET_CONNECTIONS: int = 500
 
     # ─── Food Safety ───────────────────────────────
-    DEFAULT_EXPIRY_HOURS: int = 4
+    DEFAULT_EXPIRY_HOURS: int = 2  # 120 min default pickup urgency
     MAX_DELIVERY_RADIUS_KM: float = 25.0
     DRIVER_SPEED_KMH: float = 25.0
     DRIVER_RATE_PER_KM: float = 12.0
     DRIVER_BASE_FARE: float = 30.0
+
+    # ─── Conversion Constants ─────────────────────
+    MEALS_PER_KG: float = 4.0  # 1 kg food = 4 meals (standard)
+    CO2_PER_KG: float = 2.5    # 1 kg food waste = 2.5 kg CO₂ equivalent
+    WATER_PER_KG: float = 1000.0  # litres of water per kg food
+    VALUE_PER_KG_INR: float = 100.0  # ₹ value per kg
+
+    # ─── Temperature Safety Thresholds ────────────
+    TEMP_SAFE_COLD_MAX_C: float = 5.0   # Cold food must stay below 5°C
+    TEMP_SAFE_HOT_MIN_C: float = 65.0   # Hot food must stay above 65°C
 
     @field_validator("DATABASE_URL")
     @classmethod

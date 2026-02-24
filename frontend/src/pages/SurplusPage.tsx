@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   Utensils, Camera, Clock, Upload, Sparkles, CheckCircle2,
   AlertCircle, TrendingUp, ArrowRight, Package, Leaf,
@@ -19,12 +20,13 @@ const FOOD_PRESETS = [
 ];
 
 export default function SurplusPage() {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     food_description: '',
     quantity_kg: 0,
     food_category: 'mixed',
-    expiry_hours: 4,
+    expiry_hours: 2,
     photo_url: '',
   });
   const [prediction, setPrediction] = useState<any>(null);
@@ -64,7 +66,7 @@ export default function SurplusPage() {
     await new Promise((r) => setTimeout(r, 2000));
     setSubmitting(false);
     setSubmitted(true);
-    toast.success('Surplus marked! AI is assigning NGO & driver...');
+    toast.success(t('surplus.surplusMarked'));
   };
 
   return (
@@ -79,17 +81,17 @@ export default function SurplusPage() {
         >
           <h1 className="text-3xl md:text-4xl font-bold font-display">
             <Utensils className="inline w-8 h-8 text-green-400 mr-2" />
-            <span className="gradient-text">Mark Surplus Food</span>
+            <span className="gradient-text">{t('surplus.title')}</span>
           </h1>
-          <p className="text-slate-400 mt-1">AI will predict quantity and auto-assign the nearest NGO & driver</p>
+          <p className="text-slate-400 mt-1">{t('surplus.subtitle')}</p>
         </motion.div>
 
         {/* Progress Steps */}
         <div className="flex items-center justify-center gap-4 mb-10">
           {[
-            { num: 1, label: 'Select Food' },
-            { num: 2, label: 'AI Prediction' },
-            { num: 3, label: 'Confirm & Submit' },
+            { num: 1, label: t('surplus.step1') },
+            { num: 2, label: t('surplus.step2') },
+            { num: 3, label: t('surplus.step3') },
           ].map((s, i) => (
             <div key={s.num} className="flex items-center gap-2">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 ${
@@ -119,7 +121,7 @@ export default function SurplusPage() {
               <div className="glass-card p-6 md:p-8">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                   <Package className="w-5 h-5 text-orange-400" />
-                  Quick Select or Describe Your Surplus
+                  {t('surplus.quickSelect')}
                 </h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -144,18 +146,18 @@ export default function SurplusPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-slate-300 mb-1.5 block">Food Description</label>
+                    <label className="text-sm font-medium text-slate-300 mb-1.5 block">{t('surplus.foodDesc')}</label>
                     <textarea
                       value={form.food_description}
                       onChange={(e) => setForm({ ...form, food_description: e.target.value })}
                       className="input-field h-20 resize-none"
-                      placeholder="Describe the surplus food..."
+                      placeholder={t('surplus.foodDescPlaceholder')}
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-slate-300 mb-1.5 block">Quantity (kg)</label>
+                      <label className="text-sm font-medium text-slate-300 mb-1.5 block">{t('surplus.quantity')}</label>
                       <input
                         type="number"
                         value={form.quantity_kg || ''}
@@ -166,26 +168,26 @@ export default function SurplusPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-slate-300 mb-1.5 block">Expiry (hours)</label>
+                      <label className="text-sm font-medium text-slate-300 mb-1.5 block">{t('surplus.expiry')}</label>
                       <select
                         value={form.expiry_hours}
                         onChange={(e) => setForm({ ...form, expiry_hours: Number(e.target.value) })}
                         className="input-field"
                       >
-                        <option value={2}>2 hours</option>
-                        <option value={4}>4 hours</option>
-                        <option value={6}>6 hours</option>
-                        <option value={8}>8 hours</option>
+                        <option value={2}>2 {t('surplus.hours')}</option>
+                        <option value={4}>4 {t('surplus.hours')}</option>
+                        <option value={6}>6 {t('surplus.hours')}</option>
+                        <option value={8}>8 {t('surplus.hours')}</option>
                       </select>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-slate-300 mb-1.5 block">Photo (optional)</label>
+                    <label className="text-sm font-medium text-slate-300 mb-1.5 block">{t('surplus.photoOptional')}</label>
                     <div className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-green-500/30 transition-colors cursor-pointer">
                       <Camera className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                      <p className="text-sm text-slate-500">Click to upload food photo</p>
-                      <p className="text-xs text-slate-600 mt-1">Helps NGOs verify quality</p>
+                      <p className="text-sm text-slate-500">{t('surplus.uploadPhoto')}</p>
+                      <p className="text-xs text-slate-600 mt-1">{t('surplus.photoHelp')}</p>
                     </div>
                   </div>
                 </div>
@@ -193,7 +195,7 @@ export default function SurplusPage() {
                 <button
                   onClick={() => {
                     if (!form.food_description || !form.quantity_kg) {
-                      toast.error('Please fill in food description and quantity');
+                      toast.error(t('surplus.fillRequired'));
                       return;
                     }
                     if (!prediction) handlePreset({ name: form.food_description, qty: form.quantity_kg, category: 'mixed', emoji: '🍽' });
@@ -201,7 +203,7 @@ export default function SurplusPage() {
                   }}
                   className="btn-primary w-full mt-6 flex items-center justify-center gap-2"
                 >
-                  Get AI Prediction
+                  {t('surplus.getAiPrediction')}
                   <Sparkles className="w-4 h-4" />
                 </button>
               </div>
@@ -219,7 +221,7 @@ export default function SurplusPage() {
               <div className="glass-card p-6 md:p-8">
                 <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-violet-400" />
-                  AI Surplus Prediction
+                  {t('surplus.aiPrediction')}
                 </h2>
 
                 {prediction ? (
@@ -227,12 +229,12 @@ export default function SurplusPage() {
                     {/* Prediction Result */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="glass-card p-5 text-center bg-gradient-to-br from-violet-500/10 to-purple-500/5 border-violet-500/20">
-                        <div className="text-sm text-slate-400 mb-1">AI Predicted</div>
+                        <div className="text-sm text-slate-400 mb-1">{t('surplus.aiPredicted')}</div>
                         <div className="text-4xl font-extrabold text-violet-400">{prediction.predicted_kg} kg</div>
-                        <div className="text-xs text-slate-500 mt-1">±2 kg accuracy</div>
+                        <div className="text-xs text-slate-500 mt-1">{t('surplus.accuracy')}</div>
                       </div>
                       <div className="glass-card p-5 text-center bg-gradient-to-br from-green-500/10 to-emerald-500/5 border-green-500/20">
-                        <div className="text-sm text-slate-400 mb-1">Your Input</div>
+                        <div className="text-sm text-slate-400 mb-1">{t('surplus.yourInput')}</div>
                         <div className="text-4xl font-extrabold text-green-400">{form.quantity_kg} kg</div>
                         <div className="text-xs text-slate-500 mt-1">{form.food_description}</div>
                       </div>
@@ -241,7 +243,7 @@ export default function SurplusPage() {
                     {/* Confidence */}
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-slate-400">Model Confidence</span>
+                        <span className="text-slate-400">{t('surplus.modelConfidence')}</span>
                         <span className="text-green-400 font-semibold">{(prediction.confidence * 100).toFixed(0)}%</span>
                       </div>
                       <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
@@ -256,7 +258,7 @@ export default function SurplusPage() {
 
                     {/* Category Breakdown */}
                     <div className="glass-card p-4 border-white/5">
-                      <h3 className="text-sm font-semibold text-slate-300 mb-3">Category Breakdown</h3>
+                      <h3 className="text-sm font-semibold text-slate-300 mb-3">{t('surplus.categoryBreakdown')}</h3>
                       <div className="grid grid-cols-3 gap-3">
                         {Object.entries(prediction.category_breakdown).map(([key, val]) => (
                           <div key={key} className="text-center">
@@ -269,16 +271,16 @@ export default function SurplusPage() {
 
                     {/* Recommendation */}
                     <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                      <div className="text-sm font-semibold text-amber-400 mb-1">AI Recommendation</div>
+                      <div className="text-sm font-semibold text-amber-400 mb-1">{t('surplus.aiRecommendation')}</div>
                       <p className="text-sm text-slate-300">{prediction.recommendation}</p>
                     </div>
 
                     <div className="flex gap-3">
                       <button onClick={() => setStep(1)} className="btn-secondary flex-1">
-                        ← Back
+                        {t('surplus.back')}
                       </button>
                       <button onClick={() => setStep(3)} className="btn-primary flex-1 flex items-center justify-center gap-2">
-                        Confirm
+                        {t('surplus.confirm')}
                         <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>
@@ -286,7 +288,7 @@ export default function SurplusPage() {
                 ) : (
                   <div className="text-center py-12">
                     <div className="w-12 h-12 border-4 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-slate-400">Running AI prediction model...</p>
+                    <p className="text-slate-400">{t('surplus.runningModel')}</p>
                   </div>
                 )}
               </div>
@@ -304,32 +306,32 @@ export default function SurplusPage() {
               <div className="glass-card p-6 md:p-8">
                 <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-green-400" />
-                  Confirm & Submit
+                  {t('surplus.confirmTitle')}
                 </h2>
 
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between py-3 border-b border-white/5">
-                    <span className="text-slate-400">Food</span>
+                    <span className="text-slate-400">{t('surplus.food')}</span>
                     <span className="text-white font-medium">{form.food_description}</span>
                   </div>
                   <div className="flex justify-between py-3 border-b border-white/5">
-                    <span className="text-slate-400">Quantity</span>
+                    <span className="text-slate-400">{t('surplus.qty')}</span>
                     <span className="text-white font-medium">{form.quantity_kg} kg</span>
                   </div>
                   <div className="flex justify-between py-3 border-b border-white/5">
-                    <span className="text-slate-400">AI Predicted</span>
+                    <span className="text-slate-400">{t('surplus.aiPredictedLabel')}</span>
                     <span className="text-violet-400 font-medium">{prediction?.predicted_kg} kg</span>
                   </div>
                   <div className="flex justify-between py-3 border-b border-white/5">
-                    <span className="text-slate-400">Expiry</span>
-                    <span className="text-white font-medium">{form.expiry_hours} hours</span>
+                    <span className="text-slate-400">{t('surplus.expiryLabel')}</span>
+                    <span className="text-white font-medium">{form.expiry_hours} {t('surplus.hours')}</span>
                   </div>
                   <div className="flex justify-between py-3 border-b border-white/5">
-                    <span className="text-slate-400">Est. Meals</span>
-                    <span className="text-green-400 font-bold">~{form.quantity_kg * 5} meals</span>
+                    <span className="text-slate-400">{t('surplus.estMeals')}</span>
+                    <span className="text-green-400 font-bold">~{form.quantity_kg * 4} {t('common.meals')}</span>
                   </div>
                   <div className="flex justify-between py-3">
-                    <span className="text-slate-400">Impact Value</span>
+                    <span className="text-slate-400">{t('surplus.impactValue')}</span>
                     <span className="text-amber-400 font-bold">₹{(form.quantity_kg * 100).toLocaleString()}</span>
                   </div>
                 </div>
@@ -338,12 +340,12 @@ export default function SurplusPage() {
                   <div className="flex items-start gap-3">
                     <Sparkles className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-slate-300">
-                      <p className="font-semibold text-green-400 mb-1">What happens next:</p>
+                      <p className="font-semibold text-green-400 mb-1">{t('surplus.whatHappensNext')}</p>
                       <ul className="space-y-1 text-slate-400">
-                        <li>1. AI assigns nearest available NGO (est. 30 seconds)</li>
-                        <li>2. Nearest driver gets notification (est. 1 minute)</li>
-                        <li>3. Driver arrives for pickup (est. 15-20 minutes)</li>
-                        <li>4. Food delivered to NGO (est. 25-35 minutes total)</li>
+                        <li>{t('surplus.nextStep1')}</li>
+                        <li>{t('surplus.nextStep2')}</li>
+                        <li>{t('surplus.nextStep3')}</li>
+                        <li>{t('surplus.nextStep4')}</li>
                       </ul>
                     </div>
                   </div>
@@ -351,7 +353,7 @@ export default function SurplusPage() {
 
                 <div className="flex gap-3">
                   <button onClick={() => setStep(2)} className="btn-secondary flex-1">
-                    ← Back
+                    {t('surplus.back')}
                   </button>
                   <button
                     onClick={handleSubmit}
@@ -361,11 +363,11 @@ export default function SurplusPage() {
                     {submitting ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Assigning...
+                        {t('surplus.assigning')}
                       </>
                     ) : (
                       <>
-                        🚀 Submit & Rescue
+                        {t('surplus.submitRescue')}
                       </>
                     )}
                   </button>
@@ -390,39 +392,41 @@ export default function SurplusPage() {
               >
                 🎉
               </motion.div>
-              <h2 className="text-3xl font-bold text-white mb-2">Food Rescue Initiated!</h2>
+              <h2 className="text-3xl font-bold text-white mb-2">{t('surplus.successTitle')}</h2>
               <p className="text-slate-400 mb-6">
-                AI has assigned <span className="text-green-400 font-semibold">Akshaya Patra Foundation</span> and 
-                driver <span className="text-cyan-400 font-semibold">Rajesh Kumar</span> is on the way!
+                {t('surplus.successDesc').split('<green>').length > 1 ? (() => {
+                  const parts = t('surplus.successDesc').split(/<green>|<\/green>|<cyan>|<\/cyan>/);
+                  return <>AI has assigned <span className="text-green-400 font-semibold">{parts[1]}</span> and driver <span className="text-cyan-400 font-semibold">{parts[3]}</span> is on the way!</>;
+                })() : t('surplus.successDesc')}
               </p>
 
               <div className="grid grid-cols-3 gap-4 max-w-sm mx-auto mb-8">
                 <div className="text-center">
                   <Leaf className="w-6 h-6 text-green-400 mx-auto mb-1" />
                   <div className="text-xl font-bold text-white">{form.quantity_kg} kg</div>
-                  <div className="text-xs text-slate-500">Food Saved</div>
+                  <div className="text-xs text-slate-500">{t('surplus.foodSavedLabel')}</div>
                 </div>
                 <div className="text-center">
                   <TrendingUp className="w-6 h-6 text-amber-400 mx-auto mb-1" />
-                  <div className="text-xl font-bold text-white">~{form.quantity_kg * 5}</div>
-                  <div className="text-xs text-slate-500">Meals</div>
+                  <div className="text-xl font-bold text-white">~{form.quantity_kg * 4}</div>
+                  <div className="text-xs text-slate-500">{t('surplus.meals')}</div>
                 </div>
                 <div className="text-center">
                   <Clock className="w-6 h-6 text-cyan-400 mx-auto mb-1" />
                   <div className="text-xl font-bold text-white">~25</div>
-                  <div className="text-xs text-slate-500">Min ETA</div>
+                  <div className="text-xs text-slate-500">{t('surplus.minEta')}</div>
                 </div>
               </div>
 
               <div className="flex gap-3 justify-center">
                 <button
-                  onClick={() => { setSubmitted(false); setStep(1); setForm({ food_description: '', quantity_kg: 0, food_category: 'mixed', expiry_hours: 4, photo_url: '' }); setPrediction(null); }}
+                  onClick={() => { setSubmitted(false); setStep(1); setForm({ food_description: '', quantity_kg: 0, food_category: 'mixed', expiry_hours: 2, photo_url: '' }); setPrediction(null); }}
                   className="btn-secondary"
                 >
-                  Mark Another
+                  {t('surplus.markAnother')}
                 </button>
                 <a href="/tracking" className="btn-primary flex items-center gap-2">
-                  Track Delivery
+                  {t('surplus.trackDelivery')}
                   <ArrowRight className="w-4 h-4" />
                 </a>
               </div>

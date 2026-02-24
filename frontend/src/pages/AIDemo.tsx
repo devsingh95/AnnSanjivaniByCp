@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   Brain, Sparkles, Route, MessageSquare, TrendingUp,
   ArrowRight, Cpu, Zap, Target, BarChart3, Truck, Clock,
@@ -20,6 +21,7 @@ const EVENTS = ['normal', 'wedding', 'festival', 'corporate', 'birthday'];
 const WEATHER = ['clear', 'rain', 'hot', 'cold'];
 
 export default function AIDemo() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<typeof DEMO_TAB[number]>('surplus-prediction');
   
   // Surplus Prediction State
@@ -59,7 +61,7 @@ export default function AIDemo() {
       setPrediction({
         predicted_kg: Math.max(predicted, 5),
         confidence: (0.82 + Math.random() * 0.12).toFixed(2),
-        meals: predicted * 5,
+        meals: predicted * 4,
         value_inr: predicted * 100,
         co2_kg: (predicted * 2.5).toFixed(1),
         breakdown: {
@@ -150,23 +152,23 @@ export default function AIDemo() {
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm font-medium mb-4">
             <Cpu className="w-4 h-4" />
-            AI/ML Showcase
+            {t('aiDemo.showcase')}
           </div>
           <h1 className="text-3xl md:text-5xl font-bold font-display mb-2">
-            <span className="gradient-text-cool">AI-Powered</span>{' '}
-            <span className="text-white">Food Rescue</span>
+            <span className="gradient-text-cool">{t('aiDemo.title').split(' ').slice(0, 2).join(' ')}</span>{' '}
+            <span className="text-white">{t('aiDemo.title').split(' ').slice(2).join(' ') || 'Ann-Sanjivani AI'}</span>
           </h1>
           <p className="text-slate-400 max-w-2xl mx-auto">
-            Experience the ML models that power our platform — surplus prediction, route optimization, and food classification.
+            {t('aiDemo.subtitle')}
           </p>
         </motion.div>
 
         {/* Tab Selector */}
         <div className="flex justify-center gap-2 mb-8 flex-wrap">
           {[
-            { key: 'surplus-prediction', label: 'Surplus Prediction', icon: Brain, color: 'violet' },
-            { key: 'route-optimization', label: 'Route Optimization', icon: Route, color: 'cyan' },
-            { key: 'food-classification', label: 'Food Classification', icon: MessageSquare, color: 'amber' },
+            { key: 'surplus-prediction', label: t('aiDemo.tab1'), icon: Brain, color: 'violet' },
+            { key: 'route-optimization', label: t('aiDemo.tab2'), icon: Route, color: 'cyan' },
+            { key: 'food-classification', label: t('aiDemo.tab3'), icon: MessageSquare, color: 'amber' },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -197,11 +199,11 @@ export default function AIDemo() {
                 <div className="glass-card p-6">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-5">
                     <Brain className="w-5 h-5 text-violet-400" />
-                    Configure Prediction
+                    {t('aiDemo.configurePrediction')}
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm text-slate-400 mb-1.5 block">Restaurant</label>
+                      <label className="text-sm text-slate-400 mb-1.5 block">{t('aiDemo.restaurant')}</label>
                       <select
                         value={predForm.restaurant.id}
                         onChange={(e) => setPredForm({ ...predForm, restaurant: RESTAURANTS_DEMO.find(r => r.id === Number(e.target.value))! })}
@@ -214,13 +216,13 @@ export default function AIDemo() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-sm text-slate-400 mb-1.5 block">Day</label>
+                        <label className="text-sm text-slate-400 mb-1.5 block">{t('aiDemo.day')}</label>
                         <select value={predForm.day} onChange={(e) => setPredForm({ ...predForm, day: Number(e.target.value) })} className="input-field">
                           {DAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="text-sm text-slate-400 mb-1.5 block">Guest Count</label>
+                        <label className="text-sm text-slate-400 mb-1.5 block">{t('aiDemo.guestCount')}</label>
                         <input
                           type="number"
                           value={predForm.guests}
@@ -233,13 +235,13 @@ export default function AIDemo() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-sm text-slate-400 mb-1.5 block">Event Type</label>
+                        <label className="text-sm text-slate-400 mb-1.5 block">{t('aiDemo.eventType')}</label>
                         <select value={predForm.event} onChange={(e) => setPredForm({ ...predForm, event: e.target.value })} className="input-field">
                           {EVENTS.map((e) => <option key={e} value={e}>{e.charAt(0).toUpperCase() + e.slice(1)}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="text-sm text-slate-400 mb-1.5 block">Weather</label>
+                        <label className="text-sm text-slate-400 mb-1.5 block">{t('aiDemo.weather')}</label>
                         <select value={predForm.weather} onChange={(e) => setPredForm({ ...predForm, weather: e.target.value })} className="input-field">
                           {WEATHER.map((w) => <option key={w} value={w}>{w.charAt(0).toUpperCase() + w.slice(1)}</option>)}
                         </select>
@@ -250,18 +252,18 @@ export default function AIDemo() {
                       {predLoading ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Running XGBoost Model...
+                          {t('aiDemo.runningXgboost')}
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4" />
-                          Predict Surplus
+                          {t('aiDemo.runPrediction')}
                         </>
                       )}
                     </button>
 
                     <div className="text-xs text-slate-600 text-center">
-                      Model: XGBoost Regressor • Features: 12 • Trained on 10K data points
+                      {t('aiDemo.modelInfo')}
                     </div>
                   </div>
                 </div>
@@ -270,7 +272,7 @@ export default function AIDemo() {
                 <div className="glass-card p-6">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-5">
                     <Target className="w-5 h-5 text-green-400" />
-                    Prediction Results
+                    {t('aiDemo.predictionResults')}
                   </h3>
 
                   {prediction ? (
@@ -281,10 +283,10 @@ export default function AIDemo() {
                     >
                       {/* Main Prediction */}
                       <div className="text-center p-6 rounded-xl bg-gradient-to-br from-violet-500/10 to-purple-500/5 border border-violet-500/20">
-                        <div className="text-sm text-slate-400 mb-1">Predicted Surplus</div>
+                        <div className="text-sm text-slate-400 mb-1">{t('aiDemo.predictedSurplus')}</div>
                         <div className="text-5xl font-extrabold text-violet-400">{prediction.predicted_kg} kg</div>
                         <div className="text-sm text-slate-500 mt-1">
-                          Confidence: <span className="text-green-400">{(prediction.confidence * 100).toFixed(0)}%</span>
+                          {t('aiDemo.confidence')}: <span className="text-green-400">{(prediction.confidence * 100).toFixed(0)}%</span>
                         </div>
                       </div>
 
@@ -292,21 +294,21 @@ export default function AIDemo() {
                       <div className="grid grid-cols-3 gap-3 text-center">
                         <div className="p-3 rounded-lg bg-white/5">
                           <div className="text-lg font-bold text-green-400">{prediction.meals}</div>
-                          <div className="text-xs text-slate-500">Meals</div>
+                          <div className="text-xs text-slate-500">{t('aiDemo.mealsLabel')}</div>
                         </div>
                         <div className="p-3 rounded-lg bg-white/5">
                           <div className="text-lg font-bold text-amber-400">₹{prediction.value_inr.toLocaleString()}</div>
-                          <div className="text-xs text-slate-500">Value</div>
+                          <div className="text-xs text-slate-500">{t('aiDemo.valueLabel')}</div>
                         </div>
                         <div className="p-3 rounded-lg bg-white/5">
                           <div className="text-lg font-bold text-cyan-400">{prediction.co2_kg} kg</div>
-                          <div className="text-xs text-slate-500">CO₂ Saved</div>
+                          <div className="text-xs text-slate-500">{t('aiDemo.co2Saved')}</div>
                         </div>
                       </div>
 
                       {/* Breakdown */}
                       <div>
-                        <div className="text-sm font-semibold text-slate-300 mb-2">Category Breakdown</div>
+                        <div className="text-sm font-semibold text-slate-300 mb-2">{t('aiDemo.categoryBreakdown')}</div>
                         {Object.entries(prediction.breakdown).map(([cat, val]) => (
                           <div key={cat} className="flex items-center gap-3 mb-2">
                             <div className="text-xs text-slate-400 w-28">{cat}</div>
@@ -330,7 +332,7 @@ export default function AIDemo() {
                   ) : (
                     <div className="text-center py-16 text-slate-600">
                       <Brain className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                      <p>Configure parameters and hit "Predict Surplus" to see AI results</p>
+                      <p>{t('aiDemo.configurePrompt')}</p>
                     </div>
                   )}
                 </div>
@@ -349,18 +351,17 @@ export default function AIDemo() {
             >
               <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
                 <Route className="w-6 h-6 text-cyan-400" />
-                Vehicle Routing Problem (VRP) Solver
+                {t('aiDemo.vrpTitle')}
               </h3>
 
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
                   <p className="text-sm text-slate-400 mb-4">
-                    Google OR-Tools optimizes multi-stop pickup and delivery routes for drivers, 
-                    minimizing total distance and ensuring food freshness.
+                    {t('aiDemo.vrpDesc')}
                   </p>
 
                   <div className="glass-card p-4 mb-4 border-cyan-500/10">
-                    <h4 className="text-sm font-semibold text-cyan-400 mb-2">Demo Scenario</h4>
+                    <h4 className="text-sm font-semibold text-cyan-400 mb-2">{t('aiDemo.demoScenario')}</h4>
                     <div className="text-sm text-slate-300 space-y-1">
                       <p>📍 <strong>Driver:</strong> Starting from Bandra</p>
                       <p>🍽️ <strong>Pickup 1:</strong> Taj Palace Kitchen, Colaba</p>
@@ -374,17 +375,17 @@ export default function AIDemo() {
                     {routeLoading ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Running OR-Tools Solver...
+                        {t('aiDemo.runningOrTools')}
                       </>
                     ) : (
                       <>
                         <Zap className="w-4 h-4" />
-                        Optimize Route
+                        {t('aiDemo.optimizeRoute')}
                       </>
                     )}
                   </button>
                   <div className="text-xs text-slate-600 text-center mt-2">
-                    Solver: Google OR-Tools VRP • Algorithm: Nearest Neighbor + 2-opt
+                    {t('aiDemo.solverInfo')}
                   </div>
                 </div>
 
@@ -429,15 +430,15 @@ export default function AIDemo() {
                       <div className="grid grid-cols-3 gap-3 text-center">
                         <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
                           <div className="text-lg font-bold text-cyan-400">{routeResult.total_distance} km</div>
-                          <div className="text-xs text-slate-500">Total Distance</div>
+                          <div className="text-xs text-slate-500">{t('aiDemo.totalDistance')}</div>
                         </div>
                         <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                           <div className="text-lg font-bold text-green-400">{routeResult.total_time} min</div>
-                          <div className="text-xs text-slate-500">Total Time</div>
+                          <div className="text-xs text-slate-500">{t('aiDemo.totalTime')}</div>
                         </div>
                         <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
                           <div className="text-lg font-bold text-amber-400">₹{routeResult.fuel_cost}</div>
-                          <div className="text-xs text-slate-500">Fuel Cost</div>
+                          <div className="text-xs text-slate-500">{t('aiDemo.fuelCost')}</div>
                         </div>
                       </div>
 
@@ -448,7 +449,7 @@ export default function AIDemo() {
                   ) : (
                     <div className="text-center py-16 text-slate-600">
                       <Route className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                      <p>Click "Optimize Route" to run the VRP solver</p>
+                      <p>{t('aiDemo.routePrompt')}</p>
                     </div>
                   )}
                 </div>
@@ -467,18 +468,17 @@ export default function AIDemo() {
             >
               <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
                 <MessageSquare className="w-6 h-6 text-amber-400" />
-                NLP Food Classification
+                {t('aiDemo.nlpTitle')}
               </h3>
 
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
                   <p className="text-sm text-slate-400 mb-4">
-                    IndicBERT-powered NLP classifies food descriptions into categories, 
-                    helping match food types with NGO preferences and dietary requirements.
+                    {t('aiDemo.nlpDesc')}
                   </p>
 
                   <div className="mb-4">
-                    <label className="text-sm text-slate-300 mb-1.5 block">Food Description</label>
+                    <label className="text-sm text-slate-300 mb-1.5 block">{t('aiDemo.foodDescription')}</label>
                     <textarea
                       value={classText}
                       onChange={(e) => setClassText(e.target.value)}
@@ -520,7 +520,7 @@ export default function AIDemo() {
                     )}
                   </button>
                   <div className="text-xs text-slate-600 text-center mt-2">
-                    Model: IndicBERT v2 • Fine-tuned on 50K Indian food descriptions
+                    {t('aiDemo.nlpModelInfo')}
                   </div>
                 </div>
 
@@ -528,7 +528,7 @@ export default function AIDemo() {
                   {classResult ? (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
                       <div className="text-center p-6 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20">
-                        <div className="text-sm text-slate-400 mb-1">Primary Classification</div>
+                        <div className="text-sm text-slate-400 mb-1">{t('aiDemo.primaryClassification')}</div>
                         <div className="text-3xl font-extrabold text-amber-400">{classResult.primary}</div>
                         <div className="text-xs text-slate-500 mt-1">
                           {classResult.tokens_analyzed} tokens analyzed • {classResult.model}
@@ -536,7 +536,7 @@ export default function AIDemo() {
                       </div>
 
                       <div>
-                        <div className="text-sm font-semibold text-slate-300 mb-3">Confidence Scores</div>
+                        <div className="text-sm font-semibold text-slate-300 mb-3">{t('aiDemo.confidenceScores')}</div>
                         {classResult.categories.map((cat: any) => (
                           <div key={cat.name} className="flex items-center gap-3 mb-2">
                             <div className="text-xs text-slate-400 w-28">{cat.name}</div>
@@ -555,14 +555,13 @@ export default function AIDemo() {
                       </div>
 
                       <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/10 text-sm text-slate-300">
-                        <span className="text-green-400 font-semibold">✓ Auto-tagged:</span> This food is suitable for 
-                        vegetarian-preference NGOs and can be stored at room temperature for 4 hours.
+                        <span className="text-green-400 font-semibold">{t('aiDemo.autoTagged')}</span>
                       </div>
                     </motion.div>
                   ) : (
                     <div className="text-center py-16 text-slate-600">
                       <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                      <p>Enter a food description and click "Classify Food"</p>
+                      <p>{t('aiDemo.classifyPrompt')}</p>
                     </div>
                   )}
                 </div>
@@ -580,7 +579,7 @@ export default function AIDemo() {
         >
           <h3 className="text-xl font-bold text-white text-center mb-6 flex items-center justify-center gap-2">
             <Cpu className="w-6 h-6 text-violet-400" />
-            ML Pipeline Architecture
+            {t('aiDemo.mlPipeline')}
           </h3>
           <div className="grid md:grid-cols-4 gap-4">
             {[

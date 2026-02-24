@@ -171,13 +171,20 @@ class SurplusRequest(Base):
     expiry_time = Column(DateTime)
 
     temperature_ok = Column(Boolean, default=True)
+    temperature_celsius = Column(Float, nullable=True)   # actual temp reading
+    food_condition = Column(String(50), default="cooked") # cooked/packaged/hot/cold
     quality_rating = Column(Integer, default=5)
     feedback_note = Column(Text, nullable=True)
+    temp_safety_alert = Column(Boolean, default=False)    # True if threshold breached
+
+    accepted_at = Column(DateTime, nullable=True)         # when NGO accepted
 
     pickup_lat = Column(Float)
     pickup_lng = Column(Float)
     dropoff_lat = Column(Float)
     dropoff_lng = Column(Float)
+    donor_lat = Column(Float, nullable=True)              # geolocation auto-capture
+    donor_lng = Column(Float, nullable=True)              # geolocation auto-capture
     distance_km = Column(Float, default=0)
     eta_minutes = Column(Integer, default=0)
 

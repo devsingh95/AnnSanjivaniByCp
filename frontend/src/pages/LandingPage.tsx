@@ -9,10 +9,11 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import CountUpNumber from '../components/CountUpNumber';
+import { useTranslation } from 'react-i18next';
 
 const HERO_STATS = [
   { label: 'Food Saved', value: 4850, suffix: ' kg', icon: Leaf },
-  { label: 'Meals Served', value: 24250, suffix: '+', icon: Heart },
+  { label: 'Meals Served', value: 19400, suffix: '+', icon: Heart },
   { label: 'CO₂ Prevented', value: 12125, suffix: ' kg', icon: Globe2 },
   { label: 'Restaurants', value: 10, suffix: '+', icon: Building2 },
 ];
@@ -135,6 +136,7 @@ const TESTIMONIALS = [
 
 export default function LandingPage() {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -166,7 +168,7 @@ export default function LandingPage() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-medium mb-8"
           >
             <Sparkles className="w-4 h-4 animate-pulse" />
-            Stack Sprint Hackathon 2026 — Cloud-Native × AI/ML × Full-Stack × DevOps
+            {t('landing.badge')}
           </motion.div>
 
           {/* Main Title */}
@@ -176,14 +178,14 @@ export default function LandingPage() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold font-display tracking-tight mb-6 leading-[1.1]"
           >
-            <span className="block text-white">Rescue Food.</span>
+            <span className="block text-white">{t('landing.heroTitle1')}</span>
             <span className="block text-sm md:text-base text-slate-500 font-medium mt-1">by Team CoderPirate</span>
             <span className="block mt-2">
-              <span className="gradient-text">Save Lives.</span>
+              <span className="gradient-text">{t('landing.heroTitle2')}</span>
             </span>
             <span className="block mt-2 text-3xl sm:text-4xl md:text-5xl text-slate-400 font-semibold">
-              Powered by <span className="gradient-text-cool">AI</span> &{' '}
-              <span className="gradient-text-warm">Real-Time Logistics</span>
+              {t('landing.poweredBy')} <span className="gradient-text-cool">{t('landing.ai')}</span> &{' '}
+              <span className="gradient-text-warm">{t('landing.realTimeLogistics')}</span>
             </span>
           </motion.h1>
 
@@ -194,10 +196,9 @@ export default function LandingPage() {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="mt-6 text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed"
           >
-            India wastes <span className="text-orange-400 font-semibold">68 million tonnes</span> of food annually 
-            while <span className="text-rose-400 font-semibold">189 million</span> go hungry. Our AI-powered platform 
-            connects surplus food from restaurants to NGOs in under{' '}
-            <span className="text-green-400 font-semibold">15 minutes</span> — turning waste into meals.
+            {t('landing.heroDescPart1')} <span className="text-orange-400 font-semibold">{t('landing.68mt')}</span> {t('landing.heroDescPart2')}{' '}
+            <span className="text-rose-400 font-semibold">{t('landing.189m')}</span> {t('landing.heroDescPart3')}{' '}
+            <span className="text-green-400 font-semibold">{t('landing.15min')}</span> {t('landing.heroDescPart4')}
           </motion.p>
 
           {/* CTA Buttons */}
@@ -209,17 +210,17 @@ export default function LandingPage() {
           >
             <Link to="/dashboard" className="btn-primary text-lg group flex items-center gap-2">
               <Play className="w-5 h-5" />
-              Live Dashboard
+              {t('nav.dashboard')}
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link to="/ai-demo" className="btn-secondary text-lg group flex items-center gap-2">
               <Brain className="w-5 h-5" />
-              AI Demo
+              {t('nav.aiDemo')}
               <Sparkles className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </Link>
             <Link to="/tracking" className="btn-secondary text-lg group flex items-center gap-2">
               <MapPin className="w-5 h-5" />
-              Live Map
+              {t('nav.liveMap')}
             </Link>
           </motion.div>
 
@@ -242,7 +243,7 @@ export default function LandingPage() {
                 <div className="text-2xl md:text-3xl font-bold text-white">
                   <CountUpNumber end={stat.value} suffix={stat.suffix} />
                 </div>
-                <div className="text-xs md:text-sm text-slate-400 mt-1">{stat.label}</div>
+                <div className="text-xs md:text-sm text-slate-400 mt-1">{t(`landing.${stat.label === 'Food Saved' ? 'foodSaved' : stat.label === 'Meals Served' ? 'mealsServed' : stat.label === 'CO₂ Prevented' ? 'co2Prevented' : 'restaurants'}`)}</div>
               </motion.div>
             ))}
           </motion.div>
@@ -254,7 +255,7 @@ export default function LandingPage() {
             transition={{ delay: 1.5 }}
             className="mt-16 flex flex-col items-center text-slate-500"
           >
-            <span className="text-xs mb-2">Scroll to explore</span>
+            <span className="text-xs mb-2">{t('landing.scrollToExplore')}</span>
             <ChevronDown className="w-5 h-5 animate-bounce" />
           </motion.div>
         </div>
@@ -271,10 +272,11 @@ export default function LandingPage() {
             className="text-center mb-16"
           >
             <h2 className="section-title">
-              The <span className="text-red-400">Crisis</span> We're Solving
+              {t('landing.crisisTitle', { crisis: (chunks: string) => `<span class="text-red-400">${chunks}</span>` }).split('<span').length > 1 ? '' : ''}
+              {(() => { const parts = t('landing.crisisTitle').split(/<crisis>|<\/crisis>/); return <>{parts[0]}<span className="text-red-400">{parts[1]}</span>{parts[2]}</>; })()}
             </h2>
             <p className="section-subtitle">
-              Every day in India, enough food to feed millions is wasted while people go hungry.
+              {t('landing.crisisSubtitle')}
             </p>
           </motion.div>
 
@@ -282,27 +284,27 @@ export default function LandingPage() {
             {[
               {
                 stat: '68M',
-                unit: 'tonnes/year',
-                label: 'Food Wasted in India',
-                description: 'Restaurants, hotels, and caterers waste ~40% of food prepared daily.',
+                unit: t('landing.crisisUnit1'),
+                label: t('landing.crisisLabel1'),
+                description: t('landing.crisisDesc1'),
                 color: 'text-red-400',
                 bg: 'from-red-500/20 to-red-600/5',
                 icon: '🗑️',
               },
               {
                 stat: '189M',
-                unit: 'people',
-                label: 'Undernourished Indians',
-                description: 'India has the highest number of undernourished people globally.',
+                unit: t('landing.crisisUnit2'),
+                label: t('landing.crisisLabel2'),
+                description: t('landing.crisisDesc2'),
                 color: 'text-amber-400',
                 bg: 'from-amber-500/20 to-amber-600/5',
                 icon: '😔',
               },
               {
                 stat: '₹92K',
-                unit: 'crore/year',
-                label: 'Economic Loss',
-                description: 'Food waste causes massive environmental and economic damage.',
+                unit: t('landing.crisisUnit3'),
+                label: t('landing.crisisLabel3'),
+                description: t('landing.crisisDesc3'),
                 color: 'text-orange-400',
                 bg: 'from-orange-500/20 to-orange-600/5',
                 icon: '💸',
@@ -347,13 +349,13 @@ export default function LandingPage() {
             className="glass-card p-8 md:p-12 text-center glow-green"
           >
             <h3 className="text-3xl md:text-4xl font-bold mb-4">
-              <span className="gradient-text">Our Solution</span>
+              <span className="gradient-text">{t('landing.ourSolution')}</span>
             </h3>
             <p className="text-lg text-slate-300 max-w-2xl mx-auto">
-              An AI-powered platform that <span className="text-green-400 font-semibold">predicts surplus</span>, 
-              {' '}<span className="text-cyan-400 font-semibold">auto-assigns</span> the nearest NGO & driver, 
-              and delivers food in <span className="text-amber-400 font-semibold">under 30 minutes</span> — 
-              turning India&apos;s food waste crisis into a zero-hunger movement.
+              {t('landing.solutionDesc1')} <span className="text-green-400 font-semibold">{t('landing.predictsSurplus')}</span>, 
+              {' '}<span className="text-cyan-400 font-semibold">{t('landing.autoAssigns')}</span> {t('landing.solutionDesc2')}
+              <span className="text-amber-400 font-semibold">{t('landing.under30Min')}</span> 
+              {t('landing.solutionDesc3')}
             </p>
           </motion.div>
         </div>
@@ -370,10 +372,10 @@ export default function LandingPage() {
             className="text-center mb-16"
           >
             <h2 className="section-title">
-              How <span className="gradient-text">Food Rescue</span> Works
+              How <span className="gradient-text">Ann-Sanjivani AI</span> Works
             </h2>
             <p className="section-subtitle">
-              From surplus detection to delivery — fully automated in 4 simple steps.
+              {t('landing.howItWorksSubtitle')}
             </p>
           </motion.div>
 
@@ -392,8 +394,8 @@ export default function LandingPage() {
                   {step.step}
                 </div>
                 <step.icon className={`w-10 h-10 ${step.color} mb-4`} />
-                <h3 className="text-lg font-bold text-white mb-2">{step.title}</h3>
-                <p className="text-sm text-slate-400">{step.description}</p>
+                <h3 className="text-lg font-bold text-white mb-2">{t(`landing.step${Number(step.step)}Title`)}</h3>
+                <p className="text-sm text-slate-400">{t(`landing.step${Number(step.step)}Desc`)}</p>
                 
                 {/* Connector line */}
                 {i < HOW_IT_WORKS.length - 1 && (
@@ -418,7 +420,7 @@ export default function LandingPage() {
               Powered by <span className="gradient-text-cool">Cutting-Edge Tech</span>
             </h2>
             <p className="section-subtitle">
-              Enterprise-grade architecture built for scale — from hackathon to production.
+              {t('landing.featuresSubtitle')}
             </p>
           </motion.div>
 
@@ -436,9 +438,9 @@ export default function LandingPage() {
                   <feature.icon className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2 group-hover:text-green-400 transition-colors">
-                  {feature.title}
+                  {t(`landing.feat${feature.title === 'AI-Powered Predictions' ? 'Ai' : feature.title === 'Smart Route Optimization' ? 'Route' : feature.title === 'Real-Time GPS Tracking' ? 'Gps' : feature.title === '2-Minute Auto Assignment' ? 'Auto' : feature.title === 'Cloud-Native Architecture' ? 'Cloud' : 'Safety'}Title`)}
                 </h3>
-                <p className="text-slate-400 text-sm leading-relaxed">{feature.description}</p>
+                <p className="text-slate-400 text-sm leading-relaxed">{t(`landing.feat${feature.title === 'AI-Powered Predictions' ? 'Ai' : feature.title === 'Smart Route Optimization' ? 'Route' : feature.title === 'Real-Time GPS Tracking' ? 'Gps' : feature.title === '2-Minute Auto Assignment' ? 'Auto' : feature.title === 'Cloud-Native Architecture' ? 'Cloud' : 'Safety'}Desc`)}</p>
               </motion.div>
             ))}
           </div>
@@ -458,7 +460,7 @@ export default function LandingPage() {
             <h2 className="section-title">
               <span className="gradient-text-warm">Tech Stack</span> That Scales
             </h2>
-            <p className="section-subtitle">12+ technologies working in harmony</p>
+            <p className="section-subtitle">{t('landing.techStackSubtitle')}</p>
           </motion.div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -543,7 +545,7 @@ export default function LandingPage() {
             <h2 className="section-title">
               Built to <span className="gradient-text">Scale</span>
             </h2>
-            <p className="section-subtitle">From 1 city to 100 cities — 1 million meals per year</p>
+            <p className="section-subtitle">{t('landing.scaleSubtitle')}</p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-6">
@@ -594,15 +596,15 @@ export default function LandingPage() {
                 <p className="text-slate-500 text-sm mb-6">{phase.timeline}</p>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Cities</span>
+                    <span className="text-slate-400">{t('landing.cities')}</span>
                     <span className="text-white font-semibold">{phase.cities}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Restaurants</span>
+                    <span className="text-slate-400">{t('landing.restaurants')}</span>
                     <span className="text-white font-semibold">{phase.restaurants}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Daily Capacity</span>
+                    <span className="text-slate-400">{t('landing.dailyCapacity')}</span>
                     <span className="text-green-400 font-semibold">{phase.daily}</span>
                   </div>
                 </div>
@@ -622,19 +624,18 @@ export default function LandingPage() {
           >
             <div className="text-6xl mb-6 animate-wave inline-block">🍽️</div>
             <h2 className="text-4xl md:text-6xl font-extrabold font-display mb-6">
-              <span className="text-white">Ready to</span>{' '}
-              <span className="gradient-text">Rescue Food?</span>
+              <span className="text-white">{t('landing.readyTitle').split('?')[0]}?</span>{' '}
+              <span className="gradient-text">{t('landing.readyTitle').includes('?') ? '' : ''}</span>
             </h2>
             <p className="text-lg text-slate-400 mb-10 max-w-2xl mx-auto">
-              Join the movement. Every meal rescued is a life touched. 
-              Start making an impact today.
+              {t('landing.readyDesc')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/dashboard" className="btn-primary text-lg px-12 py-4">
-                Launch Dashboard →
+                {t('landing.startRescuing')} →
               </Link>
               <Link to="/register" className="btn-secondary text-lg px-12 py-4">
-                Join as Partner
+                {t('nav.register')}
               </Link>
             </div>
           </motion.div>
@@ -650,21 +651,19 @@ export default function LandingPage() {
                 <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
                   <Utensils className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-lg font-bold font-display">Food Rescue</span>
-                <span className="text-xs text-slate-500 font-medium ml-1">by CoderPirate</span>
+                <span className="text-lg font-bold font-display">Ann-Sanjivani AI</span>
               </div>
               <p className="text-sm text-slate-500">
-                AI-powered platform connecting surplus food to those in need. 
-                Built by Team CoderPirate for Stack Sprint Hackathon 2026.
+                {t('landing.footer.footerDesc')}
               </p>
             </div>
             <div>
-              <h4 className="font-semibold text-white mb-3">Platform</h4>
+              <h4 className="font-semibold text-white mb-3">{t('landing.footer.platform')}</h4>
               <div className="space-y-2 text-sm text-slate-500">
-                <Link to="/dashboard" className="block hover:text-green-400 transition-colors">Dashboard</Link>
-                <Link to="/tracking" className="block hover:text-green-400 transition-colors">Live Tracking</Link>
-                <Link to="/impact" className="block hover:text-green-400 transition-colors">Impact Stats</Link>
-                <Link to="/ai-demo" className="block hover:text-green-400 transition-colors">AI Demo</Link>
+                <Link to="/dashboard" className="block hover:text-green-400 transition-colors">{t('nav.dashboard')}</Link>
+                <Link to="/tracking" className="block hover:text-green-400 transition-colors">{t('landing.footer.liveTracking')}</Link>
+                <Link to="/impact" className="block hover:text-green-400 transition-colors">{t('landing.footer.impactStats')}</Link>
+                <Link to="/ai-demo" className="block hover:text-green-400 transition-colors">{t('nav.aiDemo')}</Link>
               </div>
             </div>
             <div>
@@ -677,7 +676,7 @@ export default function LandingPage() {
               </div>
             </div>
             <div>
-              <h4 className="font-semibold text-white mb-3">Hackathon Areas</h4>
+              <h4 className="font-semibold text-white mb-3">{t('landing.footer.hackathonAreas')}</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2"><Cloud className="w-3 h-3 text-cyan-400" /> <span className="text-slate-500">Cloud-Native</span></div>
                 <div className="flex items-center gap-2"><GitBranch className="w-3 h-3 text-green-400" /> <span className="text-slate-500">DevOps</span></div>
@@ -687,8 +686,8 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-white/5 mt-8 pt-8 text-center text-sm text-slate-600">
-            <p>© 2026 Food Rescue Platform by <span className="text-green-400 font-semibold">Team CoderPirate</span>. Built with ❤️ for Stack Sprint Hackathon.</p>
-            <p className="mt-1">Saving food. Serving humanity. One meal at a time. 🌍</p>
+            <p>© 2026 Ann-Sanjivani AI by <span className="text-green-400 font-semibold">Team CoderPirate</span>. {t('landing.footer.madeWith')}</p>
+            <p className="mt-1">{t('landing.footer.savingFood')}</p>
           </div>
         </div>
       </footer>

@@ -452,18 +452,33 @@ async def create_surplus_request(
     )
 
     now = datetime.datetime.utcnow()
+
+    # ── Temperature safety check ──────────────
+    temp_alert = False
+    if data.temperature_celsius is not None:
+        if data.food_condition == "cold" and data.temperature_celsius > settings.TEMP_SAFE_COLD_MAX_C:
+            temp_alert = True
+        elif data.food_condition == "hot" and data.temperature_celsius < settings.TEMP_SAFE_HOT_MIN_C:
+            temp_alert = True
+
     sr = SurplusRequest(
         restaurant_id=restaurant.id,
         food_description=data.food_description,
         food_category=classification["primary_category"],
         quantity_kg=data.quantity_kg,
         predicted_quantity_kg=prediction["predicted_kg"],
-        servings=data.servings or int(data.quantity_kg * 5),
+        servings=data.servings or int(data.quantity_kg * settings.MEALS_PER_KG),
         photo_url=data.photo_url,
         status=OrderStatus.PENDING.value,
         expiry_time=now + datetime.timedelta(hours=data.expiry_hours),
         pickup_lat=restaurant.latitude,
         pickup_lng=restaurant.longitude,
+        temperature_celsius=data.temperature_celsius,
+        food_condition=data.food_condition,
+        temperature_ok=not temp_alert,
+        temp_safety_alert=temp_alert,
+        donor_lat=data.donor_lat,
+        donor_lng=data.donor_lng,
         created_at=now,
     )
     db.add(sr)
@@ -482,6 +497,7 @@ async def create_surplus_request(
         sr.dropoff_lat = nearest_ngo.latitude
         sr.dropoff_lng = nearest_ngo.longitude
         sr.status = OrderStatus.ASSIGNED.value
+        sr.accepted_at = now  # track acceptance timestamp
 
         # Notify NGO
         await _create_notification(
@@ -619,7 +635,9 @@ async def update_surplus_status(
         req.quality_rating = payload.quality_rating
 
     # Status side-effects
-    if payload.new_status == OrderStatus.PICKED_UP.value:
+    if payload.new_status == OrderStatus.ASSIGNED.value:
+        req.accepted_at = now  # track when donation was accepted
+    elif payload.new_status == OrderStatus.PICKED_UP.value:
         req.pickup_time = now
     elif payload.new_status == OrderStatus.IN_TRANSIT.value:
         pass
@@ -762,6 +780,29 @@ async def get_impact_dashboard(db: AsyncSession = Depends(get_db)):
         select(NGO.name).order_by(desc(NGO.total_kg_received)).limit(1)
     )).scalar()
 
+    # ── Success rate (delivered / (delivered + expired)) ──
+    delivered_count = (await db.execute(
+        select(func.count()).select_from(SurplusRequest).where(
+            SurplusRequest.status == OrderStatus.DELIVERED.value
+        )
+    )).scalar() or 0
+    expired_count = (await db.execute(
+        select(func.count()).select_from(SurplusRequest).where(
+            SurplusRequest.status == OrderStatus.EXPIRED.value
+        )
+    )).scalar() or 0
+    success_rate = round(
+        (delivered_count / max(delivered_count + expired_count, 1)) * 100, 1
+    )
+
+    # ── Average response time (created_at → accepted_at) ──
+    avg_resp = (await db.execute(
+        select(func.avg(
+            func.julianday(SurplusRequest.accepted_at) - func.julianday(SurplusRequest.created_at)
+        )).where(SurplusRequest.accepted_at.isnot(None))
+    )).scalar()
+    avg_response_time_mins = round((avg_resp or 0) * 24 * 60, 1)  # julianday diff → minutes
+
     return ImpactDashboard(
         total_kg_saved=round(agg[0] or 0, 1),
         total_meals_served=int(agg[1] or 0),
@@ -779,6 +820,8 @@ async def get_impact_dashboard(db: AsyncSession = Depends(get_db)):
         today_meals=int(today_row[1] or random.randint(400, 1000)),
         top_restaurant=top_rest,
         top_ngo=top_ngo_name,
+        success_rate=success_rate,
+        avg_response_time_mins=avg_response_time_mins,
     )
 
 
@@ -914,6 +957,44 @@ async def admin_stats(
 
     avg_rating = (await db.execute(select(func.avg(Restaurant.rating)))).scalar() or 0
 
+    # ── Success rate (delivered / (delivered + expired)) ──
+    delivered_cnt = orders_by_status.get(OrderStatus.DELIVERED.value, 0)
+    expired_cnt = orders_by_status.get(OrderStatus.EXPIRED.value, 0)
+    success_rate = round(
+        (delivered_cnt / max(delivered_cnt + expired_cnt, 1)) * 100, 1
+    )
+
+    # ── Average response time (created_at → accepted_at) ──
+    avg_resp = (await db.execute(
+        select(func.avg(
+            func.julianday(SurplusRequest.accepted_at) - func.julianday(SurplusRequest.created_at)
+        )).where(SurplusRequest.accepted_at.isnot(None))
+    )).scalar()
+    avg_response_time_mins = round((avg_resp or 0) * 24 * 60, 1)
+
+    # ── Total food rescued ──
+    total_rescued = (await db.execute(
+        select(func.sum(SurplusRequest.quantity_kg)).where(
+            SurplusRequest.status == OrderStatus.DELIVERED.value
+        )
+    )).scalar() or 0
+
+    # ── Active donations (in-progress statuses) ──
+    active_statuses = [OrderStatus.PENDING.value, OrderStatus.ASSIGNED.value,
+                       OrderStatus.PICKED_UP.value, OrderStatus.IN_TRANSIT.value]
+    active_donations = (await db.execute(
+        select(func.count()).select_from(SurplusRequest).where(
+            SurplusRequest.status.in_(active_statuses)
+        )
+    )).scalar() or 0
+
+    # ── Temperature safety breaches ──
+    temp_breaches = (await db.execute(
+        select(func.count()).select_from(SurplusRequest).where(
+            SurplusRequest.temp_safety_alert == True
+        )
+    )).scalar() or 0
+
     return AdminStats(
         total_users=total_users,
         total_restaurants=total_restaurants,
@@ -923,6 +1004,11 @@ async def admin_stats(
         orders_by_status=orders_by_status,
         revenue_total=round(revenue, 0),
         avg_rating=round(avg_rating, 2),
+        success_rate=success_rate,
+        avg_response_time_mins=avg_response_time_mins,
+        total_food_rescued_kg=round(total_rescued, 1),
+        active_donations=active_donations,
+        temp_safety_breaches=temp_breaches,
     )
 
 

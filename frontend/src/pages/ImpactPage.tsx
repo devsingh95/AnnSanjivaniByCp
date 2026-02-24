@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   BarChart3, Leaf, Heart, Globe2, DollarSign, Droplets,
   TrendingUp, Calendar, Building2, HeartHandshake, Truck,
@@ -15,12 +16,12 @@ const DAILY_DATA = Array.from({ length: 30 }, (_, i) => ({
 }));
 
 const IMPACT_STATS = [
-  { label: 'Total Food Saved', value: 4850, suffix: ' kg', icon: Leaf, color: 'text-green-400', bg: 'from-green-500/20 to-emerald-500/5', border: 'border-green-500/20' },
-  { label: 'Meals Served', value: 24250, suffix: '+', icon: Heart, color: 'text-rose-400', bg: 'from-rose-500/20 to-pink-500/5', border: 'border-rose-500/20' },
-  { label: 'CO₂ Prevented', value: 12125, suffix: ' kg', icon: Globe2, color: 'text-cyan-400', bg: 'from-cyan-500/20 to-blue-500/5', border: 'border-cyan-500/20' },
-  { label: 'Water Saved', value: 4850000, suffix: ' L', icon: Droplets, color: 'text-sky-400', bg: 'from-sky-500/20 to-blue-500/5', border: 'border-sky-500/20' },
-  { label: 'Money Saved', value: 485000, prefix: '₹', suffix: '', icon: DollarSign, color: 'text-amber-400', bg: 'from-amber-500/20 to-yellow-500/5', border: 'border-amber-500/20' },
-  { label: 'Deliveries', value: 650, suffix: '+', icon: Truck, color: 'text-violet-400', bg: 'from-violet-500/20 to-purple-500/5', border: 'border-violet-500/20' },
+  { label: 'totalFoodSaved', value: 4850, suffix: ' kg', icon: Leaf, color: 'text-green-400', bg: 'from-green-500/20 to-emerald-500/5', border: 'border-green-500/20' },
+  { label: 'mealsServed', value: 19400, suffix: '+', icon: Heart, color: 'text-rose-400', bg: 'from-rose-500/20 to-pink-500/5', border: 'border-rose-500/20' },
+  { label: 'co2Prevented', value: 12125, suffix: ' kg', icon: Globe2, color: 'text-cyan-400', bg: 'from-cyan-500/20 to-blue-500/5', border: 'border-cyan-500/20' },
+  { label: 'waterSaved', value: 4850000, suffix: ' L', icon: Droplets, color: 'text-sky-400', bg: 'from-sky-500/20 to-blue-500/5', border: 'border-sky-500/20' },
+  { label: 'moneySaved', value: 485000, prefix: '₹', suffix: '', icon: DollarSign, color: 'text-amber-400', bg: 'from-amber-500/20 to-yellow-500/5', border: 'border-amber-500/20' },
+  { label: 'deliveries', value: 650, suffix: '+', icon: Truck, color: 'text-violet-400', bg: 'from-violet-500/20 to-purple-500/5', border: 'border-violet-500/20' },
 ];
 
 const TOP_RESTAURANTS = [
@@ -40,6 +41,7 @@ const TOP_NGOS = [
 ];
 
 export default function ImpactPage() {
+  const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | 'all'>('30d');
   const maxKg = Math.max(...DAILY_DATA.map((d) => d.kg));
 
@@ -56,9 +58,9 @@ export default function ImpactPage() {
         >
           <h1 className="text-3xl md:text-4xl font-bold font-display">
             <BarChart3 className="inline w-8 h-8 text-green-400 mr-2" />
-            <span className="gradient-text">Impact Dashboard</span>
+            <span className="gradient-text">{t('impact.title')}</span>
           </h1>
-          <p className="text-slate-400 mt-1">Measuring real-world impact of food rescue operations</p>
+          <p className="text-slate-400 mt-1">{t('impact.subtitle')}</p>
         </motion.div>
 
         {/* Hero Impact Banner */}
@@ -71,15 +73,15 @@ export default function ImpactPage() {
           <div className="relative z-10 text-center">
             <div className="text-5xl mb-4">🌍</div>
             <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-2">
-              <CountUpNumber end={4850} suffix=" kg" /> of food rescued
+              <CountUpNumber end={4850} suffix=" kg" /> {t('impact.foodRescued')}
             </h2>
             <p className="text-xl text-slate-400">
-              That's <span className="text-green-400 font-bold"><CountUpNumber end={24250} /></span> meals served 
-              and <span className="text-cyan-400 font-bold">₹<CountUpNumber end={485000} /></span> in value saved
+              {t('impact.thats')} <span className="text-green-400 font-bold"><CountUpNumber end={19400} /></span> {t('impact.mealsServedAnd')}{' '}
+              <span className="text-cyan-400 font-bold">₹<CountUpNumber end={485000} /></span> {t('impact.inValueSaved')}
             </p>
             <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
               <TrendingUp className="w-4 h-4" />
-              +23% increase from last month
+              {t('impact.increaseMonth')}
             </div>
           </div>
         </motion.div>
@@ -98,7 +100,7 @@ export default function ImpactPage() {
               <div className="text-xl md:text-2xl font-bold text-white">
                 <CountUpNumber end={stat.value} suffix={stat.suffix} prefix={(stat as any).prefix || ''} />
               </div>
-              <div className="text-xs text-slate-500 mt-1">{stat.label}</div>
+              <div className="text-xs text-slate-500 mt-1">{t(`impact.${stat.label}`)}</div>
             </motion.div>
           ))}
         </div>
@@ -126,7 +128,7 @@ export default function ImpactPage() {
                       : 'text-slate-500 hover:text-slate-300'
                   }`}
                 >
-                  {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : 'All'}
+                  {range === '7d' ? t('impact.days7') : range === '30d' ? t('impact.days30') : t('impact.all')}
                 </button>
               ))}
             </div>
@@ -165,7 +167,7 @@ export default function ImpactPage() {
           >
             <div className="p-5 border-b border-white/5 flex items-center gap-2">
               <Building2 className="w-5 h-5 text-orange-400" />
-              <h3 className="text-lg font-bold text-white">Top Restaurants</h3>
+              <h3 className="text-lg font-bold text-white">{t('impact.topRestaurants')}</h3>
             </div>
             <div className="divide-y divide-white/5">
               {TOP_RESTAURANTS.map((r, i) => (
@@ -180,7 +182,7 @@ export default function ImpactPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-white truncate">{r.name}</div>
-                    <div className="text-xs text-slate-500">{r.donations} donations</div>
+                    <div className="text-xs text-slate-500">{r.donations} {t('impact.donations')}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-bold text-green-400">{r.kg} kg</div>
@@ -200,7 +202,7 @@ export default function ImpactPage() {
           >
             <div className="p-5 border-b border-white/5 flex items-center gap-2">
               <HeartHandshake className="w-5 h-5 text-green-400" />
-              <h3 className="text-lg font-bold text-white">Top NGOs</h3>
+              <h3 className="text-lg font-bold text-white">{t('impact.topNgos')}</h3>
             </div>
             <div className="divide-y divide-white/5">
               {TOP_NGOS.map((n, i) => (
@@ -215,11 +217,11 @@ export default function ImpactPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-white truncate">{n.name}</div>
-                    <div className="text-xs text-slate-500">{n.people} people/day</div>
+                    <div className="text-xs text-slate-500">{n.people} {t('impact.peopleDay')}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-bold text-green-400">{n.kg} kg</div>
-                    <div className="text-xs text-slate-500">{n.pickups} pickups</div>
+                    <div className="text-xs text-slate-500">{n.pickups} {t('impact.pickups')}</div>
                   </div>
                 </div>
               ))}
@@ -234,13 +236,13 @@ export default function ImpactPage() {
           transition={{ delay: 0.6 }}
           className="mt-8 glass-card p-8 text-center"
         >
-          <h3 className="text-2xl font-bold text-white mb-6">Environmental Equivalents</h3>
+          <h3 className="text-2xl font-bold text-white mb-6">{t('impact.environmentTitle')}</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { emoji: '🌳', value: '121', label: 'Trees Planted Equivalent', desc: 'CO₂ absorption' },
-              { emoji: '🚗', value: '48,500', label: 'km NOT Driven', desc: 'Emissions saved' },
-              { emoji: '🏊', value: '1,940', label: 'Olympic Pools', desc: 'Water conserved' },
-              { emoji: '💡', value: '12,125', label: 'kWh Energy Saved', desc: 'Processing energy' },
+              { emoji: '🌳', value: '121', label: t('impact.treesPlanted'), desc: t('impact.co2Absorption') },
+              { emoji: '🚗', value: '48,500', label: t('impact.kmNotDriven'), desc: t('impact.emissionsSaved') },
+              { emoji: '🏊', value: '1,940', label: t('impact.olympicPools'), desc: t('impact.waterConserved') },
+              { emoji: '💡', value: '12,125', label: t('impact.energySaved'), desc: t('impact.processingEnergy') },
             ].map((item, i) => (
               <motion.div
                 key={item.label}

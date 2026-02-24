@@ -203,7 +203,11 @@ class SurplusRequestCreate(BaseModel):
     quantity_kg: float = Field(gt=0, le=5000, description="kg of food")
     servings: Optional[int] = Field(None, ge=0)
     photo_url: Optional[str] = None
-    expiry_hours: int = Field(4, ge=1, le=24)
+    expiry_hours: int = Field(2, ge=1, le=24)
+    temperature_celsius: Optional[float] = Field(None, description="Current food temperature °C")
+    food_condition: str = Field("cooked", pattern=r"^(cooked|packaged|hot|cold)$")
+    donor_lat: Optional[float] = Field(None, ge=-90, le=90, description="Auto-captured donor latitude")
+    donor_lng: Optional[float] = Field(None, ge=-180, le=180, description="Auto-captured donor longitude")
 
 
 class SurplusRequestResponse(BaseModel):
@@ -222,12 +226,18 @@ class SurplusRequestResponse(BaseModel):
     delivery_time: Optional[datetime] = None
     expiry_time: Optional[datetime] = None
     temperature_ok: bool
+    temperature_celsius: Optional[float] = None
+    food_condition: Optional[str] = "cooked"
+    temp_safety_alert: bool = False
     quality_rating: int = 5
     feedback_note: Optional[str] = None
+    accepted_at: Optional[datetime] = None
     pickup_lat: Optional[float] = None
     pickup_lng: Optional[float] = None
     dropoff_lat: Optional[float] = None
     dropoff_lng: Optional[float] = None
+    donor_lat: Optional[float] = None
+    donor_lng: Optional[float] = None
     distance_km: float = 0
     eta_minutes: int = 0
     driver_payment: float = 0
@@ -354,6 +364,8 @@ class ImpactDashboard(BaseModel):
     delivered_today: int = 0
     top_restaurant: Optional[str] = None
     top_ngo: Optional[str] = None
+    success_rate: float = 0.0              # delivered / (delivered + expired) %
+    avg_response_time_mins: float = 0.0    # avg(accepted_at - created_at)
 
 
 class ImpactHistoryItem(BaseModel):
@@ -404,6 +416,11 @@ class AdminStats(BaseModel):
     orders_by_status: Dict[str, int]
     revenue_total: float
     avg_rating: float
+    success_rate: float = 0.0              # delivered / (delivered + expired) %
+    avg_response_time_mins: float = 0.0    # avg(accepted_at - created_at)
+    total_food_rescued_kg: float = 0.0     # cumulative rescued
+    active_donations: int = 0              # real-time active count
+    temp_safety_breaches: int = 0          # total temp alerts triggered
 
 
 # ════════════════════════════════════════════

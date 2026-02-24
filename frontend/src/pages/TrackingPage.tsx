@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   MapPin, Truck, Building2, HeartHandshake, Navigation, Package,
   Clock, RefreshCcw, Wifi, WifiOff,
@@ -71,6 +72,7 @@ const ACTIVE_DELIVERIES = [
 ];
 
 export default function TrackingPage() {
+  const { t } = useTranslation();
   const [selectedType, setSelectedType] = useState<'all' | 'restaurants' | 'ngos' | 'drivers'>('all');
   const [isLive, setIsLive] = useState(true);
   const [tick, setTick] = useState(0);
@@ -81,10 +83,10 @@ export default function TrackingPage() {
   }, []);
 
   const filters = [
-    { key: 'all', label: 'All', count: RESTAURANTS.length + NGOS.length + DRIVERS.length },
-    { key: 'restaurants', label: 'Restaurants', count: RESTAURANTS.length, icon: Building2, color: 'text-orange-400' },
-    { key: 'ngos', label: 'NGOs', count: NGOS.length, icon: HeartHandshake, color: 'text-green-400' },
-    { key: 'drivers', label: 'Drivers', count: DRIVERS.length, icon: Truck, color: 'text-cyan-400' },
+    { key: 'all', label: t('tracking.all'), count: RESTAURANTS.length + NGOS.length + DRIVERS.length },
+    { key: 'restaurants', label: t('tracking.restaurants'), count: RESTAURANTS.length, icon: Building2, color: 'text-orange-400' },
+    { key: 'ngos', label: t('tracking.ngos'), count: NGOS.length, icon: HeartHandshake, color: 'text-green-400' },
+    { key: 'drivers', label: t('tracking.drivers'), count: DRIVERS.length, icon: Truck, color: 'text-cyan-400' },
   ];
 
   return (
@@ -102,18 +104,18 @@ export default function TrackingPage() {
             <div>
               <h1 className="text-3xl md:text-4xl font-bold font-display">
                 <MapPin className="inline w-8 h-8 text-green-400 mr-2" />
-                <span className="gradient-text">Live Tracking</span>
+                <span className="gradient-text">{t('tracking.title')}</span>
               </h1>
-              <p className="text-slate-400 mt-1">Real-time map of all food rescue operations in Mumbai</p>
+              <p className="text-slate-400 mt-1">{t('tracking.subtitle')}</p>
             </div>
             <div className="flex items-center gap-3">
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${isLive ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
                 {isLive ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-                {isLive ? 'Live' : 'Offline'}
+                {isLive ? t('tracking.live') : t('tracking.offline')}
               </div>
               <button onClick={() => setTick(t => t + 1)} className="btn-secondary py-2 px-3 text-sm flex items-center gap-1">
                 <RefreshCcw className="w-3 h-3" />
-                Refresh
+                {t('tracking.refresh')}
               </button>
             </div>
           </div>
@@ -266,10 +268,10 @@ export default function TrackingPage() {
             <div className="absolute bottom-4 left-4 right-4 flex gap-3">
               <div className="glass-card px-4 py-2 text-xs flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-slate-300">{ACTIVE_DELIVERIES.length} active deliveries</span>
+                <span className="text-slate-300">{t('tracking.activeDeliveriesCount', { count: ACTIVE_DELIVERIES.length })}</span>
               </div>
               <div className="glass-card px-4 py-2 text-xs text-slate-400">
-                Mumbai Metropolitan Region
+                {t('tracking.mumbaiRegion')}
               </div>
             </div>
           </motion.div>
@@ -282,7 +284,7 @@ export default function TrackingPage() {
           >
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Navigation className="w-5 h-5 text-green-400" />
-              Active Deliveries
+              {t('tracking.activeDeliveries')}
             </h3>
 
             {ACTIVE_DELIVERIES.map((delivery, i) => (
@@ -327,7 +329,7 @@ export default function TrackingPage() {
                     <span>{delivery.distance} km</span>
                     <span className="text-cyan-400 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {delivery.eta} min ETA
+                      {delivery.eta} {t('tracking.minEta')}
                     </span>
                   </div>
                   <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
@@ -344,12 +346,12 @@ export default function TrackingPage() {
 
             {/* Summary */}
             <div className="glass-card p-4 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border-cyan-500/20">
-              <div className="text-sm text-slate-400 mb-1">Total Active Distance</div>
+              <div className="text-sm text-slate-400 mb-1">{t('tracking.totalActiveDistance')}</div>
               <div className="text-2xl font-bold text-white">
                 {ACTIVE_DELIVERIES.reduce((a, d) => a + d.distance, 0).toFixed(1)} km
               </div>
               <div className="text-xs text-cyan-400 mt-1">
-                Estimated fuel savings: ₹{Math.round(ACTIVE_DELIVERIES.reduce((a, d) => a + d.distance, 0) * 3.5)}
+                {t('tracking.fuelSavings', { amount: Math.round(ACTIVE_DELIVERIES.reduce((a, d) => a + d.distance, 0) * 3.5) })}
               </div>
             </div>
           </motion.div>

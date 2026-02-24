@@ -1,24 +1,40 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Utensils, Menu, X, LayoutDashboard, MapPin, BarChart3, Brain, 
-  LogIn, UserPlus, Truck,
+  LogIn, UserPlus, Truck, Globe,
 } from 'lucide-react';
 import { useAuthStore } from '../store';
+import { useTranslation } from 'react-i18next';
+import { LANGUAGES } from '../i18n';
 
 const NAV_LINKS = [
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'Live Map', path: '/tracking', icon: MapPin },
-  { label: 'Impact', path: '/impact', icon: BarChart3 },
-  { label: 'AI Demo', path: '/ai-demo', icon: Brain },
-  { label: 'Surplus', path: '/surplus', icon: Truck },
+  { key: 'dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { key: 'liveMap', path: '/tracking', icon: MapPin },
+  { key: 'impact', path: '/impact', icon: BarChart3 },
+  { key: 'aiDemo', path: '/ai-demo', icon: Brain },
+  { key: 'surplus', path: '/surplus', icon: Truck },
 ];
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuthStore();
+  const { t, i18n } = useTranslation();
+
+  // Close language dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const currentLang = LANGUAGES.find(l => l.code === i18n.language) || LANGUAGES[0];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
@@ -33,10 +49,9 @@ export default function Navbar() {
               <Utensils className="w-5 h-5 text-white" />
             </motion.div>
             <span className="text-lg font-bold font-display">
-              <span className="text-white">Food</span>
-              <span className="text-green-400">Rescue</span>
+              <span className="text-white">Ann-</span>
+              <span className="text-green-400">Sanjivani AI</span>
             </span>
-            <span className="text-[10px] text-slate-500 font-medium -ml-1 mt-1 hidden sm:block">by CoderPirate</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -54,32 +69,65 @@ export default function Navbar() {
                   }`}
                 >
                   <link.icon className="w-4 h-4" />
-                  {link.label}
+                  {t(`nav.${link.key}`)}
                 </Link>
               );
             })}
           </div>
 
-          {/* Auth buttons */}
+          {/* Auth buttons + Language */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Language Switcher */}
+            <div ref={langRef} className="relative">
+              <button
+                onClick={() => setLangOpen(!langOpen)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-all border border-white/5"
+              >
+                <Globe className="w-4 h-4" />
+                <span className="text-xs">{currentLang.flag}</span>
+              </button>
+              {langOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute right-0 mt-2 w-44 bg-slate-900 border border-white/10 rounded-xl shadow-2xl py-1.5 z-50"
+                >
+                  {LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => { i18n.changeLanguage(lang.code); setLangOpen(false); }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
+                        i18n.language === lang.code
+                          ? 'text-green-400 bg-green-500/10'
+                          : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      <span>{lang.flag}</span>
+                      <span>{lang.label}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </div>
+
             {isAuthenticated ? (
               <div className="flex items-center gap-3">
                 <span className="text-sm text-slate-400">
                   {user?.full_name || 'User'}
                 </span>
                 <button onClick={logout} className="btn-secondary text-sm py-2 px-4">
-                  Logout
+                  {t('nav.logout')}
                 </button>
               </div>
             ) : (
               <>
                 <Link to="/login" className="flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors">
                   <LogIn className="w-4 h-4" />
-                  Login
+                  {t('nav.login')}
                 </Link>
                 <Link to="/register" className="btn-primary text-sm py-2 px-4 flex items-center gap-1">
                   <UserPlus className="w-4 h-4" />
-                  Register
+                  {t('nav.register')}
                 </Link>
               </>
             )}
@@ -111,15 +159,36 @@ export default function Navbar() {
                 className="flex items-center gap-2 px-4 py-3 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition-all"
               >
                 <link.icon className="w-5 h-5" />
-                {link.label}
+                {t(`nav.${link.key}`)}
               </Link>
             ))}
+
+            {/* Mobile Language Selector */}
+            <div className="border-t border-white/5 pt-3 pb-1">
+              <div className="flex flex-wrap gap-2 px-2">
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => { i18n.changeLanguage(lang.code); setMobileOpen(false); }}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                      i18n.language === lang.code
+                        ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                        : 'text-slate-400 border border-white/5 hover:bg-white/5'
+                    }`}
+                  >
+                    <span>{lang.flag}</span>
+                    <span>{lang.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="border-t border-white/5 pt-3 flex gap-2">
               <Link to="/login" onClick={() => setMobileOpen(false)} className="btn-secondary flex-1 text-center text-sm py-2">
-                Login
+                {t('nav.login')}
               </Link>
               <Link to="/register" onClick={() => setMobileOpen(false)} className="btn-primary flex-1 text-center text-sm py-2">
-                Register
+                {t('nav.register')}
               </Link>
             </div>
           </div>

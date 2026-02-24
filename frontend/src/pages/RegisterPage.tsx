@@ -2,17 +2,19 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Utensils, Mail, Lock, User, Phone, ArrowRight, Building2, HeartHandshake, Truck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store';
 import { authAPI } from '../api';
 import toast from 'react-hot-toast';
 
 const ROLES = [
-  { key: 'restaurant', label: 'Restaurant', icon: Building2, desc: 'Donate surplus food', color: 'border-orange-500/30 bg-orange-500/10 text-orange-400' },
-  { key: 'ngo', label: 'NGO', icon: HeartHandshake, desc: 'Receive & distribute', color: 'border-green-500/30 bg-green-500/10 text-green-400' },
-  { key: 'driver', label: 'Driver', icon: Truck, desc: 'Deliver food', color: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400' },
+  { key: 'restaurant', label: 'restaurant', icon: Building2, desc: 'Donate surplus food', color: 'border-orange-500/30 bg-orange-500/10 text-orange-400' },
+  { key: 'ngo', label: 'ngo', icon: HeartHandshake, desc: 'Receive & distribute', color: 'border-green-500/30 bg-green-500/10 text-green-400' },
+  { key: 'driver', label: 'driver', icon: Truck, desc: 'Deliver food', color: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400' },
 ];
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     full_name: '',
     email: '',
@@ -30,7 +32,7 @@ export default function RegisterPage() {
     try {
       const res = await authAPI.register(form);
       login(res.data.user, res.data.access_token);
-      toast.success(`Welcome to Food Rescue, ${res.data.user.full_name}!`);
+      toast.success(`Welcome to Ann-Sanjivani AI, ${res.data.user.full_name}!`);
       navigate('/dashboard');
     } catch (err: any) {
       toast.error(err?.response?.data?.detail || 'Registration failed.');
@@ -57,8 +59,8 @@ export default function RegisterPage() {
                 <Utensils className="w-6 h-6 text-white" />
               </div>
             </Link>
-            <h1 className="text-2xl font-bold font-display text-white">Join Food Rescue</h1>
-            <p className="text-slate-400 mt-1 text-sm">Start making an impact today</p>
+            <h1 className="text-2xl font-bold font-display text-white">{t('auth.registerTitle')}</h1>
+            <p className="text-slate-400 mt-1 text-sm">{t('auth.registerSubtitle')}</p>
           </div>
 
           {/* Role Selection */}
@@ -72,7 +74,7 @@ export default function RegisterPage() {
                 }`}
               >
                 <role.icon className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-xs font-semibold">{role.label}</div>
+                <div className="text-xs font-semibold">{t(`auth.${role.label}`)}</div>
               </button>
             ))}
           </div>
@@ -86,7 +88,7 @@ export default function RegisterPage() {
                   value={form.full_name}
                   onChange={(e) => setForm({ ...form, full_name: e.target.value })}
                   className="input-field pl-10"
-                  placeholder="Full Name"
+                  placeholder={t('auth.fullName')}
                   required
                 />
               </div>
@@ -99,7 +101,7 @@ export default function RegisterPage() {
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="input-field pl-10"
-                  placeholder="Email Address"
+                  placeholder={t('auth.email')}
                   required
                 />
               </div>
@@ -112,7 +114,7 @@ export default function RegisterPage() {
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   className="input-field pl-10"
-                  placeholder="Phone (optional)"
+                  placeholder={t('auth.phone')}
                 />
               </div>
             </div>
@@ -124,7 +126,7 @@ export default function RegisterPage() {
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   className="input-field pl-10"
-                  placeholder="Password"
+                  placeholder={t('auth.password')}
                   required
                   minLength={6}
                 />
@@ -140,7 +142,7 @@ export default function RegisterPage() {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  Create Account
+                  {t('auth.createAccount')}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -148,9 +150,9 @@ export default function RegisterPage() {
           </form>
 
           <p className="text-center text-sm text-slate-500 mt-6">
-            Already have an account?{' '}
+            {t('auth.hasAccount')}{' '}
             <Link to="/login" className="text-green-400 hover:text-green-300 font-medium">
-              Sign In
+              {t('auth.signIn')}
             </Link>
           </p>
         </div>

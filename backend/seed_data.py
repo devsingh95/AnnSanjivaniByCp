@@ -203,6 +203,22 @@ async def seed_database(db: AsyncSession):
         stat = random.choice(statuses)
         now = datetime.datetime.utcnow()
         created = now - datetime.timedelta(hours=random.randint(1, 72))
+        food_cond = random.choice(["cooked", "packaged", "hot", "cold"])
+        temp_c = round(random.uniform(2, 8), 1) if food_cond == "cold" else (
+            round(random.uniform(60, 80), 1) if food_cond == "hot" else
+            round(random.uniform(18, 30), 1)
+        )
+        # Temperature safety: cold > 5°C or hot < 65°C → breach
+        temp_alert = (
+            (food_cond == "cold" and temp_c > 5.0) or
+            (food_cond == "hot" and temp_c < 65.0)
+        )
+
+        # accepted_at: ~5-20 min after created for assigned+ orders
+        accepted_at = (
+            created + datetime.timedelta(minutes=random.randint(5, 20))
+            if stat != OrderStatus.PENDING else None
+        )
 
         sr = SurplusRequest(
             restaurant_id=rest.id,
@@ -216,14 +232,20 @@ async def seed_database(db: AsyncSession):
             status=stat.value,
             pickup_time=created + datetime.timedelta(minutes=30) if stat != OrderStatus.PENDING else None,
             delivery_time=created + datetime.timedelta(hours=1) if stat == OrderStatus.DELIVERED else None,
-            expiry_time=created + datetime.timedelta(hours=4),
-            temperature_ok=True,
+            expiry_time=created + datetime.timedelta(hours=2),  # 120 min default urgency
+            temperature_ok=not temp_alert,
+            temperature_celsius=temp_c,
+            food_condition=food_cond,
+            temp_safety_alert=temp_alert,
+            accepted_at=accepted_at,
             quality_rating=random.randint(4, 5),
             feedback_note=random.choice(FEEDBACK_NOTES) if stat == OrderStatus.DELIVERED else None,
             pickup_lat=rest.latitude,
             pickup_lng=rest.longitude,
             dropoff_lat=ngo.latitude,
             dropoff_lng=ngo.longitude,
+            donor_lat=rest.latitude + random.uniform(-0.001, 0.001),
+            donor_lng=rest.longitude + random.uniform(-0.001, 0.001),
             distance_km=round(random.uniform(2, 15), 1),
             eta_minutes=random.randint(10, 45),
             driver_payment=round(random.uniform(50, 200), 0),
@@ -240,7 +262,7 @@ async def seed_database(db: AsyncSession):
             date=date,
             city="Mumbai",
             total_kg_saved=daily_kg,
-            total_meals_served=int(daily_kg * 5),
+            total_meals_served=int(daily_kg * 4),
             total_co2_saved_kg=round(daily_kg * 2.5, 1),
             total_water_saved_liters=round(daily_kg * 1000, 0),
             total_money_saved_inr=round(daily_kg * 100, 0),

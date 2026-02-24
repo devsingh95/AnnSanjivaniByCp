@@ -118,3 +118,4 @@ docker-compose up --build
 **Team:** Stack Sprint Hackathon 2026
 
 *Building a Zero-Hunger Future, One Meal at a Time* 🌍
+

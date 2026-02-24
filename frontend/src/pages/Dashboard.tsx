@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   Package, Truck, Building2, HeartHandshake, TrendingUp, Clock,
   Leaf, DollarSign, MapPin, ArrowRight, Activity, Zap,
@@ -22,7 +23,7 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = 
 // Mock data for fallback
 const MOCK_IMPACT = {
   total_kg_saved: 4850,
-  total_meals_served: 24250,
+  total_meals_served: 19400,
   total_co2_saved_kg: 12125,
   total_water_saved_liters: 4850000,
   total_money_saved_inr: 485000,
@@ -45,6 +46,7 @@ const MOCK_ORDERS = [
 ];
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const [impact, setImpact] = useState(MOCK_IMPACT);
   const [orders, setOrders] = useState(MOCK_ORDERS);
   const [loading, setLoading] = useState(true);
@@ -89,10 +91,10 @@ export default function Dashboard() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold font-display">
-                <span className="gradient-text">Live Dashboard</span>
+                <span className="gradient-text">{t('dashboard.title')}</span>
               </h1>
               <p className="text-slate-400 mt-1">
-                Real-time food rescue operations across Mumbai
+                {t('dashboard.subtitle')}
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -104,7 +106,7 @@ export default function Dashboard() {
               </div>
               <Link to="/surplus" className="btn-primary py-2 px-4 text-sm flex items-center gap-2">
                 <Utensils className="w-4 h-4" />
-                Mark Surplus
+                {t('dashboard.markSurplus')}
               </Link>
             </div>
           </div>
@@ -114,7 +116,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
             {
-              label: 'Total Food Saved',
+              label: t('dashboard.totalFoodSaved'),
               value: impact.total_kg_saved,
               suffix: ' kg',
               icon: Leaf,
@@ -123,7 +125,7 @@ export default function Dashboard() {
               glow: 'group-hover:shadow-green-500/20',
             },
             {
-              label: 'Meals Served',
+              label: t('dashboard.mealsServed'),
               value: impact.total_meals_served,
               suffix: '+',
               icon: HeartHandshake,
@@ -132,7 +134,7 @@ export default function Dashboard() {
               glow: 'group-hover:shadow-rose-500/20',
             },
             {
-              label: 'CO₂ Prevented',
+              label: t('dashboard.co2Prevented'),
               value: impact.total_co2_saved_kg,
               suffix: ' kg',
               icon: TrendingUp,
@@ -141,7 +143,7 @@ export default function Dashboard() {
               glow: 'group-hover:shadow-cyan-500/20',
             },
             {
-              label: 'Money Saved',
+              label: t('dashboard.moneySaved'),
               value: impact.total_money_saved_inr,
               prefix: '₹',
               suffix: '',
@@ -162,7 +164,7 @@ export default function Dashboard() {
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-3">
                   <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                  <span className="text-xs text-slate-500 bg-white/5 px-2 py-0.5 rounded-full">All Time</span>
+                  <span className="text-xs text-slate-500 bg-white/5 px-2 py-0.5 rounded-full">{t('dashboard.allTime')}</span>
                 </div>
                 <div className="text-2xl md:text-3xl font-bold text-white">
                   <CountUpNumber end={stat.value} suffix={stat.suffix} prefix={(stat as any).prefix || ''} />
@@ -176,10 +178,10 @@ export default function Dashboard() {
         {/* Second row: Active metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Active Orders', value: impact.active_orders || activeOrders.length, icon: Activity, color: 'text-orange-400' },
-            { label: 'Today Saved', value: `${impact.today_kg_saved} kg`, icon: Zap, color: 'text-yellow-400' },
-            { label: 'Avg. Delivery', value: `${impact.avg_delivery_time_mins} min`, icon: Clock, color: 'text-blue-400' },
-            { label: 'Today Meals', value: impact.today_meals, icon: HeartHandshake, color: 'text-pink-400' },
+            { label: t('dashboard.activeOrders'), value: impact.active_orders || activeOrders.length, icon: Activity, color: 'text-orange-400' },
+            { label: t('dashboard.todaySaved'), value: `${impact.today_kg_saved} kg`, icon: Zap, color: 'text-yellow-400' },
+            { label: t('dashboard.avgDelivery'), value: `${impact.avg_delivery_time_mins} min`, icon: Clock, color: 'text-blue-400' },
+            { label: t('dashboard.todayMeals'), value: impact.today_meals, icon: HeartHandshake, color: 'text-pink-400' },
           ].map((item, i) => (
             <motion.div
               key={item.label}
@@ -212,10 +214,10 @@ export default function Dashboard() {
               <div className="p-5 border-b border-white/5 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
                   <Package className="w-5 h-5 text-green-400" />
-                  Live Orders
+                  {t('dashboard.liveOrders')}
                 </h2>
                 <Link to="/surplus" className="text-sm text-green-400 hover:text-green-300 flex items-center gap-1">
-                  View All <ArrowRight className="w-3 h-3" />
+                  {t('dashboard.viewAll')} <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
               <div className="divide-y divide-white/5">
@@ -238,7 +240,7 @@ export default function Dashboard() {
                             </span>
                             <span className={status.color}>
                               <StatusIcon className="w-3 h-3 inline mr-1" />
-                              {status.label}
+                              {t(`dashboard.${order.status === 'picked_up' ? 'pickedUp' : order.status === 'in_transit' ? 'inTransit' : order.status}`)}
                             </span>
                           </div>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
@@ -289,12 +291,12 @@ export default function Dashboard() {
               transition={{ delay: 0.6 }}
               className="glass-card p-5"
             >
-              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Network Status</h3>
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">{t('dashboard.networkStatus')}</h3>
               <div className="space-y-4">
                 {[
-                  { label: 'Restaurants', value: impact.active_restaurants, icon: Building2, color: 'text-orange-400' },
-                  { label: 'NGOs', value: impact.active_ngos, icon: HeartHandshake, color: 'text-green-400' },
-                  { label: 'Drivers Online', value: impact.active_drivers, icon: Truck, color: 'text-cyan-400' },
+                  { label: t('dashboard.restaurants'), value: impact.active_restaurants, icon: Building2, color: 'text-orange-400' },
+                  { label: t('dashboard.ngos'), value: impact.active_ngos, icon: HeartHandshake, color: 'text-green-400' },
+                  { label: t('dashboard.driversOnline'), value: impact.active_drivers, icon: Truck, color: 'text-cyan-400' },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -314,13 +316,13 @@ export default function Dashboard() {
               transition={{ delay: 0.7 }}
               className="glass-card p-5"
             >
-              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Quick Actions</h3>
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">{t('dashboard.quickActions')}</h3>
               <div className="space-y-2">
                 {[
-                  { label: 'Mark Surplus Food', path: '/surplus', icon: Utensils, color: 'bg-green-500/10 text-green-400' },
-                  { label: 'Track Deliveries', path: '/tracking', icon: MapPin, color: 'bg-cyan-500/10 text-cyan-400' },
-                  { label: 'AI Predictions', path: '/ai-demo', icon: Zap, color: 'bg-violet-500/10 text-violet-400' },
-                  { label: 'Impact Report', path: '/impact', icon: TrendingUp, color: 'bg-amber-500/10 text-amber-400' },
+                  { label: t('dashboard.markSurplus'), path: '/surplus', icon: Utensils, color: 'bg-green-500/10 text-green-400' },
+                  { label: t('dashboard.trackOrders'), path: '/tracking', icon: MapPin, color: 'bg-cyan-500/10 text-cyan-400' },
+                  { label: t('aiDemo.tab1'), path: '/ai-demo', icon: Zap, color: 'bg-violet-500/10 text-violet-400' },
+                  { label: t('dashboard.viewImpact'), path: '/impact', icon: TrendingUp, color: 'bg-amber-500/10 text-amber-400' },
                 ].map((action) => (
                   <Link
                     key={action.path}
@@ -345,15 +347,15 @@ export default function Dashboard() {
               className="glass-card p-5 bg-gradient-to-br from-green-500/10 to-emerald-500/5 border-green-500/20"
             >
               <div className="text-3xl mb-2">🎉</div>
-              <h3 className="text-lg font-bold text-white mb-1">Today&apos;s Impact</h3>
+              <h3 className="text-lg font-bold text-white mb-1">{t('dashboard.todayImpact')}</h3>
               <p className="text-sm text-slate-400 mb-3">
-                You&apos;ve already saved <span className="text-green-400 font-semibold">{impact.today_kg_saved} kg</span> of food today!
+                {t('dashboard.youSaved', { kg: impact.today_kg_saved })}
               </p>
               <div className="text-2xl font-bold text-green-400">
-                ~{impact.today_meals} meals served
+                {t('dashboard.mealsServedCount', { meals: impact.today_meals })}
               </div>
               <div className="text-xs text-slate-500 mt-1">
-                Worth ₹{(impact.today_kg_saved * 100).toLocaleString()} in food value
+                {t('dashboard.worthInr', { value: (impact.today_kg_saved * 100).toLocaleString() })}
               </div>
             </motion.div>
           </div>
