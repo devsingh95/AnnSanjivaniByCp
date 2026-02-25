@@ -266,9 +266,11 @@ class SurplusPredictionRequest(BaseModel):
     restaurant_id: Optional[int] = None
     day_of_week: int = Field(ge=0, le=6, description="0=Mon … 6=Sun")
     guest_count: int = Field(100, gt=0)
-    event_type: str = Field("normal", pattern=r"^(normal|wedding|festival|corporate|birthday)$")
-    weather: str = Field("clear", pattern=r"^(clear|rain|hot|cold)$")
+    event_type: str = Field("normal")
+    weather: str = Field("clear")
     base_surplus_kg: Optional[float] = None
+    cuisine: Optional[str] = Field("Unknown", description="Cuisine type for the trained model")
+    time_of_day: Optional[int] = Field(12, ge=0, le=23, description="Hour of day 0-23")
 
 
 class SurplusPredictionResponse(BaseModel):

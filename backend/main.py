@@ -449,6 +449,8 @@ async def create_surplus_request(
         day_of_week=datetime.datetime.utcnow().weekday(),
         guest_count=100, event_type="normal", weather="clear",
         base_surplus=data.quantity_kg,
+        cuisine=restaurant.cuisine or "Unknown",
+        time_of_day=datetime.datetime.utcnow().hour,
     )
 
     now = datetime.datetime.utcnow()
@@ -703,6 +705,8 @@ async def predict_surplus(data: SurplusPredictionRequest):
         event_type=data.event_type,
         weather=data.weather,
         base_surplus=data.base_surplus_kg or 15.0,
+        cuisine=data.cuisine or "Unknown",
+        time_of_day=data.time_of_day or 12,
     )
     return SurplusPredictionResponse(**prediction)
 

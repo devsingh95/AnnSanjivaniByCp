@@ -11,10 +11,10 @@ from pydantic import field_validator
 class Settings(BaseSettings):
     # ─── Core ──────────────────────────────────────
     PROJECT_NAME: str = "Food Rescue Platform"
-    VERSION: str = "2.0.0"
+    VERSION: str = "2.1.0"
     DESCRIPTION: str = "AI-Powered Food Waste Prevention & Redistribution Platform"
     API_PREFIX: str = "/api/v1"
-    DEBUG: bool = True
+    DEBUG: bool = False
 
     # ─── Database ──────────────────────────────────
     DATABASE_URL: str = "sqlite+aiosqlite:///./food_rescue.db"
@@ -36,10 +36,10 @@ class Settings(BaseSettings):
     ]
 
     # ─── ML / AI ───────────────────────────────────
-    ML_MODEL_PATH: str = "./ml_models/"
-    SURPLUS_MODEL_VERSION: str = "xgboost-v2.1"
-    ROUTE_SOLVER: str = "ortools-nearest-neighbor"
-    CLASSIFIER_MODEL: str = "indicbert-v2-finetuned"
+    ML_MODEL_PATH: str = "./models/"
+    SURPLUS_MODEL_VERSION: str = "xgboost-v3.0-trained"
+    ROUTE_SOLVER: str = "nearest-neighbor-2opt"
+    CLASSIFIER_MODEL: str = "keyword-nlp-v2"
 
     # ─── Rate Limiting ─────────────────────────────
     RATE_LIMIT_PER_MINUTE: int = 120

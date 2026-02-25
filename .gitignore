@@ -58,3 +58,6 @@ htmlcov/
 # ─── Misc ─────────────────────────────────────────
 *.bak
 *.tmp
+
+# ─── ML Models (large files) ──────────────────────
+backend/models/food_classifier.pkl
