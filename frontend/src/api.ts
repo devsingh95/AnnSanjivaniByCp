@@ -49,8 +49,13 @@ export const surplusAPI = {
   list: (status?: string, limit = 50) =>
     api.get(`/surplus?limit=${limit}${status ? `&status=${status}` : ''}`),
   get: (id: number) => api.get(`/surplus/${id}`),
-  updateStatus: (id: number, status: string) =>
-    api.patch(`/surplus/${id}/status?new_status=${status}`),
+  myOrders: () => api.get('/surplus/my-orders'),
+  updateStatus: (id: number, newStatus: string, feedback?: string, rating?: number) =>
+    api.patch(`/surplus/${id}/status`, {
+      new_status: newStatus,
+      ...(feedback ? { feedback_note: feedback } : {}),
+      ...(rating ? { quality_rating: rating } : {}),
+    }),
 };
 
 // ML

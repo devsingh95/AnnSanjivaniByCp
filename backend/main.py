@@ -453,7 +453,7 @@ async def create_surplus_request(
         day_of_week=datetime.datetime.utcnow().weekday(),
         guest_count=100, event_type="normal", weather="clear",
         base_surplus=data.quantity_kg,
-        cuisine=restaurant.cuisine or "Unknown",
+        cuisine=restaurant.cuisine_type or "Unknown",
         time_of_day=datetime.datetime.utcnow().hour,
     )
 
@@ -590,6 +590,55 @@ async def list_surplus_requests(
         if req.restaurant_id:
             r = (await db.execute(select(Restaurant).where(Restaurant.id == req.restaurant_id))).scalar_one_or_none()
             resp.restaurant_name = r.name if r else None
+        if req.ngo_id:
+            n = (await db.execute(select(NGO).where(NGO.id == req.ngo_id))).scalar_one_or_none()
+            resp.ngo_name = n.name if n else None
+        if req.driver_id:
+            d = (await db.execute(select(Driver).where(Driver.id == req.driver_id))).scalar_one_or_none()
+            if d:
+                u = (await db.execute(select(User).where(User.id == d.user_id))).scalar_one_or_none()
+                resp.driver_name = u.full_name if u else None
+        responses.append(resp)
+    return responses
+
+
+@app.get("/api/v1/surplus/my-orders", response_model=List[SurplusRequestResponse], tags=["Surplus"])
+async def my_orders(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return all surplus requests owned by the current user (restaurant) or assigned to them (driver/ngo)."""
+    reqs: list = []
+    if user.role == UserRole.RESTAURANT.value:
+        rest = (await db.execute(select(Restaurant).where(Restaurant.user_id == user.id))).scalar_one_or_none()
+        if rest:
+            result = await db.execute(
+                select(SurplusRequest).where(SurplusRequest.restaurant_id == rest.id)
+                .order_by(desc(SurplusRequest.created_at)).limit(50)
+            )
+            reqs = result.scalars().all()
+    elif user.role == UserRole.DRIVER.value:
+        drv = (await db.execute(select(Driver).where(Driver.user_id == user.id))).scalar_one_or_none()
+        if drv:
+            result = await db.execute(
+                select(SurplusRequest).where(SurplusRequest.driver_id == drv.id)
+                .order_by(desc(SurplusRequest.created_at)).limit(50)
+            )
+            reqs = result.scalars().all()
+    elif user.role == UserRole.NGO.value:
+        ngo = (await db.execute(select(NGO).where(NGO.user_id == user.id))).scalar_one_or_none()
+        if ngo:
+            result = await db.execute(
+                select(SurplusRequest).where(SurplusRequest.ngo_id == ngo.id)
+                .order_by(desc(SurplusRequest.created_at)).limit(50)
+            )
+            reqs = result.scalars().all()
+
+    responses: list = []
+    for req in reqs:
+        resp = SurplusRequestResponse.model_validate(req)
+        r = (await db.execute(select(Restaurant).where(Restaurant.id == req.restaurant_id))).scalar_one_or_none()
+        resp.restaurant_name = r.name if r else None
         if req.ngo_id:
             n = (await db.execute(select(NGO).where(NGO.id == req.ngo_id))).scalar_one_or_none()
             resp.ngo_name = n.name if n else None
@@ -811,21 +860,42 @@ async def get_impact_dashboard(db: AsyncSession = Depends(get_db)):
     )).scalar()
     avg_response_time_mins = round((avg_resp or 0) * 24 * 60, 1)  # julianday diff → minutes
 
+    # ── Fallback: compute from SurplusRequest when ImpactMetric is empty ──
+    raw_kg = agg[0] or 0
+    if raw_kg == 0:
+        raw_kg = (await db.execute(
+            select(func.sum(SurplusRequest.quantity_kg)).where(
+                SurplusRequest.status == OrderStatus.DELIVERED.value
+            )
+        )).scalar() or 0
+    raw_meals = int(agg[1] or 0) or int(raw_kg * settings.MEALS_PER_KG)
+    raw_co2 = round(agg[2] or 0, 1) or round(raw_kg * settings.CO2_PER_KG, 1)
+    raw_water = round(agg[3] or 0, 0) or round(raw_kg * settings.WATER_PER_KG, 0)
+    raw_money = round(agg[4] or 0, 0) or round(raw_kg * settings.VALUE_PER_KG_INR, 0)
+
+    # ── Avg delivery time ──
+    avg_del = (await db.execute(
+        select(func.avg(
+            func.julianday(SurplusRequest.delivery_time) - func.julianday(SurplusRequest.pickup_time)
+        )).where(SurplusRequest.delivery_time.isnot(None), SurplusRequest.pickup_time.isnot(None))
+    )).scalar()
+    avg_delivery_time = round((avg_del or 0) * 24 * 60, 1) or 0
+
     return ImpactDashboard(
-        total_kg_saved=round(agg[0] or 0, 1),
-        total_meals_served=int(agg[1] or 0),
-        total_co2_saved_kg=round(agg[2] or 0, 1),
-        total_water_saved_liters=round(agg[3] or 0, 0),
-        total_money_saved_inr=round(agg[4] or 0, 0),
+        total_kg_saved=round(raw_kg, 1),
+        total_meals_served=raw_meals,
+        total_co2_saved_kg=raw_co2,
+        total_water_saved_liters=raw_water,
+        total_money_saved_inr=raw_money,
         active_restaurants=rest_count,
         active_ngos=ngo_count,
         active_drivers=driver_count,
-        avg_delivery_time_mins=28.5,
+        avg_delivery_time_mins=avg_delivery_time,
         active_orders=active_orders,
         pending_orders=pending_orders,
         delivered_today=delivered_today,
-        today_kg_saved=round(today_row[0] or random.uniform(80, 200), 1),
-        today_meals=int(today_row[1] or random.randint(400, 1000)),
+        today_kg_saved=round(today_row[0] or 0, 1),
+        today_meals=int(today_row[1] or 0),
         top_restaurant=top_rest,
         top_ngo=top_ngo_name,
         success_rate=success_rate,
