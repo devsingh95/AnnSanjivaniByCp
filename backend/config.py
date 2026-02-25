@@ -69,6 +69,17 @@ class Settings(BaseSettings):
     TEMP_SAFE_COLD_MAX_C: float = 5.0   # Cold food must stay below 5°C
     TEMP_SAFE_HOT_MIN_C: float = 65.0   # Hot food must stay above 65°C
 
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def parse_allowed_origins(cls, v):
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("["):
+                import json
+                return json.loads(v)
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
+
     @field_validator("DATABASE_URL")
     @classmethod
     def validate_db_url(cls, v: str) -> str:
