@@ -145,9 +145,13 @@ manager = ConnectionManager()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    async with async_session() as db:
-        await seed_database(db)
-    logger.info("Startup complete — tables created, data seeded.")
+    # Only seed if DEBUG mode is enabled (local dev only)
+    if settings.DEBUG:
+        async with async_session() as db:
+            await seed_database(db)
+        logger.info("Startup complete — tables created, demo data seeded (DEBUG mode).")
+    else:
+        logger.info("Startup complete — tables created, no demo data seeded (production).")
     yield
     logger.info("Shutdown.")
 

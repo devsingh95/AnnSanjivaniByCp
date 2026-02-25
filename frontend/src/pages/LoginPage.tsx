@@ -9,8 +9,8 @@ import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const [email, setEmail] = useState('restaurant1@foodrescue.in');
-  const [password, setPassword] = useState('demo123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -109,20 +109,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          {/* Demo credentials */}
-          <div className="mt-6 p-4 rounded-xl bg-green-500/5 border border-green-500/10">
-            <div className="flex items-center gap-2 text-green-400 text-xs font-semibold mb-2">
-              <Sparkles className="w-3 h-3" />
-              {t('auth.demoCreds')}
-            </div>
-            <div className="space-y-1 text-xs text-slate-400">
-              <p><span className="text-slate-300">Restaurant:</span> restaurant1@foodrescue.in / demo123</p>
-              <p><span className="text-slate-300">NGO:</span> ngo1@foodrescue.in / demo123</p>
-              <p><span className="text-slate-300">Driver:</span> driver1@foodrescue.in / demo123</p>
-              <p><span className="text-slate-300">Admin:</span> admin@foodrescue.in / admin123</p>
-            </div>
-          </div>
 
           <p className="text-center text-sm text-slate-500 mt-6">
             {t('auth.noAccount')}{' '}

@@ -10,12 +10,13 @@ import {
 import Navbar from '../components/Navbar';
 import CountUpNumber from '../components/CountUpNumber';
 import { useTranslation } from 'react-i18next';
+import { impactAPI } from '../api';
 
-const HERO_STATS = [
-  { label: 'Food Saved', value: 4850, suffix: ' kg', icon: Leaf },
-  { label: 'Meals Served', value: 19400, suffix: '+', icon: Heart },
-  { label: 'CO₂ Prevented', value: 12125, suffix: ' kg', icon: Globe2 },
-  { label: 'Restaurants', value: 10, suffix: '+', icon: Building2 },
+const HERO_STATS_DEFAULT = [
+  { label: 'Food Saved', value: 0, suffix: ' kg', icon: Leaf },
+  { label: 'Meals Served', value: 0, suffix: '+', icon: Heart },
+  { label: 'CO\u2082 Prevented', value: 0, suffix: ' kg', icon: Globe2 },
+  { label: 'Restaurants', value: 0, suffix: '+', icon: Building2 },
 ];
 
 const FEATURES = [
@@ -103,40 +104,53 @@ const TECH_STACK = [
   { name: 'TypeScript', category: 'Frontend', icon: '📘' },
   { name: 'TailwindCSS', category: 'Frontend', icon: '🎨' },
   { name: 'FastAPI', category: 'Backend', icon: '⚡' },
-  { name: 'PostgreSQL', category: 'Database', icon: '🐘' },
-  { name: 'Redis', category: 'Cache', icon: '🔴' },
+  { name: 'SQLite', category: 'Database', icon: '🗄️' },
   { name: 'XGBoost', category: 'ML', icon: '🤖' },
   { name: 'OR-Tools', category: 'ML', icon: '🗺️' },
-  { name: 'Docker', category: 'DevOps', icon: '🐳' },
-  { name: 'GCP Cloud Run', category: 'Cloud', icon: '☁️' },
-  { name: 'Kubernetes', category: 'Cloud', icon: '⎈' },
-  { name: 'GitHub Actions', category: 'CI/CD', icon: '🔄' },
+  { name: 'Framer Motion', category: 'Frontend', icon: '🎬' },
+  { name: 'Vite', category: 'Build', icon: '⚡' },
+  { name: 'Render', category: 'Cloud', icon: '☁️' },
+  { name: 'Vercel', category: 'Cloud', icon: '▲' },
+  { name: 'GitHub', category: 'CI/CD', icon: '🔄' },
 ];
 
 const TESTIMONIALS = [
   {
-    quote: "We used to throw away 50kg daily. Now it feeds 250 people every night.",
-    author: "Chef Rajiv Menon",
-    role: "Taj Palace Kitchen, Mumbai",
-    avatar: "👨‍🍳",
+    quote: "Our platform aims to cut restaurant food waste by connecting surplus meals to those in need.",
+    author: "Ann-Sanjivani AI",
+    role: "Platform Vision",
+    avatar: "🌿",
   },
   {
-    quote: "Response time went from 2 hours to 15 minutes. AI assignment is revolutionary.",
-    author: "Priya Sharma",
-    role: "Robin Hood Army Coordinator",
-    avatar: "👩‍💼",
+    quote: "AI-powered predictions and route optimization make food rescue faster than ever before.",
+    author: "Team CoderPirate",
+    role: "Developers",
+    avatar: "💻",
   },
   {
-    quote: "Best logistics platform I've used. Route optimization saves me 40% fuel.",
-    author: "Amit Kumar",
-    role: "Delivery Partner, Mumbai",
-    avatar: "🚗",
+    quote: "Every meal saved is a step towards zero food waste and zero hunger in India.",
+    author: "Our Mission",
+    role: "Ann-Sanjivani AI",
+    avatar: "💚",
   },
 ];
 
 export default function LandingPage() {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [heroStats, setHeroStats] = useState(HERO_STATS_DEFAULT);
   const { t } = useTranslation();
+
+  useEffect(() => {
+    impactAPI.dashboard().then((res) => {
+      const d = res.data;
+      setHeroStats([
+        { label: 'Food Saved', value: Math.round(d.total_food_saved_kg || 0), suffix: ' kg', icon: Leaf },
+        { label: 'Meals Served', value: Math.round(d.total_meals_served || 0), suffix: '+', icon: Heart },
+        { label: 'CO₂ Prevented', value: Math.round(d.total_co2_saved_kg || 0), suffix: ' kg', icon: Globe2 },
+        { label: 'Restaurants', value: d.active_restaurants || 0, suffix: '+', icon: Building2 },
+      ]);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -231,7 +245,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8, delay: 0.8 }}
             className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto"
           >
-            {HERO_STATS.map((stat, i) => (
+            {heroStats.map((stat, i) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -670,9 +684,9 @@ export default function LandingPage() {
               <h4 className="font-semibold text-white mb-3">Stack</h4>
               <div className="space-y-2 text-sm text-slate-500">
                 <p>React + TypeScript</p>
-                <p>FastAPI + PostgreSQL</p>
+                <p>FastAPI + SQLite</p>
                 <p>XGBoost + OR-Tools</p>
-                <p>GCP Cloud Run + Docker</p>
+                <p>Render + Vercel</p>
               </div>
             </div>
             <div>

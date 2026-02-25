@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
+import { mlAPI, surplusAPI } from '../api';
 
 const FOOD_PRESETS = [
   { name: 'Dal Makhani + Rice', qty: 25, category: 'curry', emoji: '🍛' },
@@ -33,40 +34,56 @@ export default function SurplusPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const handlePreset = (preset: typeof FOOD_PRESETS[0]) => {
+  const handlePreset = async (preset: typeof FOOD_PRESETS[0]) => {
     setForm({
       ...form,
       food_description: preset.name,
       quantity_kg: preset.qty,
       food_category: preset.category,
     });
-    // Simulate AI prediction
-    setTimeout(() => {
-      const predicted = preset.qty + Math.round((Math.random() - 0.3) * 8);
+    try {
+      const res = await mlAPI.predictSurplus({
+        day_of_week: new Date().getDay(),
+        guest_count: Math.round(preset.qty * 4),
+        event_type: 'normal',
+        weather: 'clear',
+        base_surplus_kg: preset.qty,
+      });
+      const data = res.data;
       setPrediction({
-        predicted_kg: Math.max(predicted, 5),
-        confidence: (0.8 + Math.random() * 0.15).toFixed(2),
-        recommendation: predicted > 30
-          ? '🔴 High surplus expected! Pre-alert 3+ NGOs.'
-          : predicted > 15
-          ? '🟡 Moderate surplus. 1-2 NGOs can handle this.'
-          : '🟢 Low surplus. Standard single-NGO assignment.',
-        category_breakdown: {
-          main_dish: Math.round(predicted * 0.5),
-          sides: Math.round(predicted * 0.3),
-          other: Math.round(predicted * 0.2),
+        predicted_kg: data.predicted_kg,
+        confidence: data.confidence,
+        recommendation: data.recommendation,
+        category_breakdown: data.category_breakdown || {
+          main_dish: Math.round(data.predicted_kg * 0.5),
+          sides: Math.round(data.predicted_kg * 0.3),
+          other: Math.round(data.predicted_kg * 0.2),
         },
       });
-    }, 800);
+    } catch (err: any) {
+      console.error('Prediction failed:', err);
+      toast.error('AI prediction failed. You can still submit manually.');
+    }
   };
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 2000));
-    setSubmitting(false);
-    setSubmitted(true);
-    toast.success(t('surplus.surplusMarked'));
+    try {
+      await surplusAPI.create({
+        food_description: form.food_description,
+        quantity_kg: form.quantity_kg,
+        food_category: form.food_category,
+        expiry_hours: form.expiry_hours,
+        photo_url: form.photo_url || undefined,
+      });
+      setSubmitted(true);
+      toast.success(t('surplus.surplusMarked'));
+    } catch (err: any) {
+      console.error('Submit failed:', err);
+      toast.error(err?.response?.data?.detail || 'Failed to submit surplus. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

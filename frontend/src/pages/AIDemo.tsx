@@ -6,19 +6,15 @@ import {
   ArrowRight, Cpu, Zap, Target, BarChart3, Truck, Clock,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import { mlAPI } from '../api';
+import toast from 'react-hot-toast';
 
 const DEMO_TAB = ['surplus-prediction', 'route-optimization', 'food-classification'] as const;
-
-const RESTAURANTS_DEMO = [
-  { id: 1, name: 'Taj Palace Kitchen', base: 45 },
-  { id: 2, name: 'Spice Garden', base: 25 },
-  { id: 3, name: 'Mumbai Masala House', base: 35 },
-  { id: 4, name: 'Grand Bhoj Thali', base: 50 },
-];
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const EVENTS = ['normal', 'wedding', 'festival', 'corporate', 'birthday'];
 const WEATHER = ['clear', 'rain', 'hot', 'cold'];
+const CUISINES = ['north_indian', 'south_indian', 'chinese', 'continental', 'mughlai', 'street_food', 'other'];
 
 export default function AIDemo() {
   const { t } = useTranslation();
@@ -26,11 +22,12 @@ export default function AIDemo() {
   
   // Surplus Prediction State
   const [predForm, setPredForm] = useState({
-    restaurant: RESTAURANTS_DEMO[0],
-    day: 5, // Saturday
+    day: 5,
     guests: 150,
     event: 'wedding',
     weather: 'clear',
+    base_surplus_kg: 30,
+    cuisine: 'north_indian',
   });
   const [prediction, setPrediction] = useState<any>(null);
   const [predLoading, setPredLoading] = useState(false);
@@ -44,99 +41,98 @@ export default function AIDemo() {
   const [classResult, setClassResult] = useState<any>(null);
   const [classLoading, setClassLoading] = useState(false);
 
-  const runPrediction = () => {
+  const runPrediction = async () => {
     setPredLoading(true);
     setPrediction(null);
-    setTimeout(() => {
-      const dayMult: Record<number, number> = { 0: 0.8, 1: 0.85, 2: 0.9, 3: 0.95, 4: 1.1, 5: 1.3, 6: 1.2 };
-      const eventMult: Record<string, number> = { normal: 1, wedding: 2.5, festival: 2, corporate: 1.5, birthday: 1.3 };
-      const weatherMult: Record<string, number> = { clear: 1, rain: 1.3, hot: 0.9, cold: 1.1 };
-      
-      const base = predForm.restaurant.base;
-      const predicted = Math.round(
-        base * (dayMult[predForm.day] || 1) * (eventMult[predForm.event] || 1) * 
-        (weatherMult[predForm.weather] || 1) * (predForm.guests / 100) + (Math.random() * 4 - 2)
-      );
-
-      setPrediction({
-        predicted_kg: Math.max(predicted, 5),
-        confidence: (0.82 + Math.random() * 0.12).toFixed(2),
-        meals: predicted * 4,
-        value_inr: predicted * 100,
-        co2_kg: (predicted * 2.5).toFixed(1),
-        breakdown: {
-          'Main Dishes': Math.round(predicted * 0.45),
-          'Rice/Bread': Math.round(predicted * 0.25),
-          'Sides/Desserts': Math.round(predicted * 0.2),
-          'Other': Math.round(predicted * 0.1),
-        },
-        recommendation: predicted > 100 
-          ? '🔴 Very high surplus! Alert 5+ NGOs and 3+ drivers immediately.'
-          : predicted > 50 
-          ? '🟡 High surplus. Pre-arrange 2-3 NGOs and 2 drivers.'
-          : predicted > 20
-          ? '🟢 Moderate surplus. Standard 1 NGO + 1 driver assignment.'
-          : '🟢 Low surplus. Routine pickup will suffice.',
+    try {
+      const res = await mlAPI.predictSurplus({
+        day_of_week: predForm.day,
+        guest_count: predForm.guests,
+        event_type: predForm.event,
+        weather: predForm.weather,
+        base_surplus_kg: predForm.base_surplus_kg,
+        cuisine: predForm.cuisine,
       });
+      const data = res.data;
+      setPrediction({
+        predicted_kg: data.predicted_kg,
+        confidence: data.confidence,
+        meals: Math.round(data.predicted_kg * 4),
+        value_inr: Math.round(data.predicted_kg * 100),
+        co2_kg: (data.predicted_kg * 2.5).toFixed(1),
+        breakdown: data.category_breakdown || {},
+        recommendation: data.recommendation,
+      });
+    } catch (err: any) {
+      console.error('Prediction failed:', err);
+      toast.error(err?.response?.data?.detail || 'Prediction failed. Please try again.');
+    } finally {
       setPredLoading(false);
-    }, 1500);
+    }
   };
 
-  const runRouteOptimization = () => {
+  const runRouteOptimization = async () => {
     setRouteLoading(true);
     setRouteResult(null);
-    setTimeout(() => {
-      setRouteResult({
-        stops: [
-          { type: 'Start', name: 'Driver Location (Bandra)', distance: '0 km', time: '0 min' },
-          { type: 'Pickup', name: 'Taj Palace Kitchen, Colaba', distance: '5.2 km', time: '12 min' },
-          { type: 'Pickup', name: 'Royal Biryani Centre, Mohammed Ali Rd', distance: '2.1 km', time: '6 min' },
-          { type: 'Dropoff', name: 'Akshaya Patra Foundation, Juhu', distance: '8.4 km', time: '22 min' },
-          { type: 'Dropoff', name: 'Robin Hood Army, BKC', distance: '3.8 km', time: '10 min' },
+    try {
+      const res = await mlAPI.optimizeRoute({
+        driver_lat: 19.0596,
+        driver_lng: 72.8295,
+        pickups: [
+          { lat: 18.9220, lng: 72.8347, name: 'Taj Palace Kitchen, Colaba' },
+          { lat: 18.9588, lng: 72.8340, name: 'Royal Biryani Centre, Mohammed Ali Rd' },
         ],
-        total_distance: 19.5,
-        total_time: 50,
-        fuel_cost: 68,
-        optimization_savings: '32% shorter than naive route',
+        dropoffs: [
+          { lat: 19.0989, lng: 72.8264, name: 'Akshaya Patra Foundation, Juhu' },
+          { lat: 19.0650, lng: 72.8694, name: 'Robin Hood Army, BKC' },
+        ],
       });
+      const data = res.data;
+      setRouteResult({
+        stops: data.optimized_route.map((s: any) => ({
+          type: s.type,
+          name: s.name,
+          distance: `${s.distance_from_prev_km.toFixed(1)} km`,
+          time: `${Math.round(s.eta_mins)} min`,
+        })),
+        total_distance: data.total_distance_km.toFixed(1),
+        total_time: Math.round(data.total_time_mins),
+        fuel_cost: Math.round(data.fuel_cost_inr),
+        optimization_savings: `CO₂ saved: ${data.co2_emission_kg.toFixed(1)} kg • Solver: ${data.solver}`,
+      });
+    } catch (err: any) {
+      console.error('Route optimization failed:', err);
+      toast.error(err?.response?.data?.detail || 'Route optimization failed. Please try again.');
+    } finally {
       setRouteLoading(false);
-    }, 2000);
+    }
   };
 
-  const runClassification = () => {
+  const runClassification = async () => {
     setClassLoading(true);
     setClassResult(null);
-    setTimeout(() => {
-      const text = classText.toLowerCase();
-      const categories: Record<string, { score: number; keywords: string[] }> = {
-        'Vegetarian': { score: 0, keywords: ['paneer', 'sabzi', 'dal', 'vegetable', 'aloo', 'gobi', 'palak', 'chole', 'rajma'] },
-        'Non-Vegetarian': { score: 0, keywords: ['chicken', 'mutton', 'fish', 'egg', 'prawn', 'kebab', 'tikka'] },
-        'Rice Dishes': { score: 0, keywords: ['rice', 'pulao', 'biryani', 'jeera rice', 'fried rice', 'khichdi'] },
-        'Bread': { score: 0, keywords: ['roti', 'naan', 'paratha', 'chapati', 'puri', 'bread', 'pav'] },
-        'Curry/Gravy': { score: 0, keywords: ['curry', 'gravy', 'masala', 'butter', 'kadai', 'korma'] },
-        'Snacks': { score: 0, keywords: ['samosa', 'pakora', 'bhaji', 'vada', 'chaat'] },
-        'Sweets': { score: 0, keywords: ['gulab jamun', 'rasgulla', 'halwa', 'kheer', 'jalebi', 'ladoo'] },
-      };
-
-      for (const [cat, data] of Object.entries(categories)) {
-        for (const kw of data.keywords) {
-          if (text.includes(kw)) data.score += 1;
-        }
-      }
-
-      const sorted = Object.entries(categories)
-        .map(([name, data]) => ({ name, score: data.score, confidence: Math.min(0.98, 0.3 + data.score * 0.2 + Math.random() * 0.1) }))
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 5);
-
+    try {
+      const res = await mlAPI.classifyFood(classText);
+      const data = res.data;
       setClassResult({
-        primary: sorted[0]?.name || 'Mixed',
-        categories: sorted,
+        primary: data.primary_category,
+        categories: (data.all_scores || []).map((s: any) => ({
+          name: s.category,
+          score: s.confidence > 0 ? 1 : 0,
+          confidence: s.confidence,
+        })),
         tokens_analyzed: classText.split(' ').length,
-        model: 'IndicBERT v2 (fine-tuned)',
+        model: data.model_version,
+        is_vegetarian: data.is_vegetarian,
+        shelf_life_hours: data.shelf_life_hours,
+        storage_recommendation: data.storage_recommendation,
       });
+    } catch (err: any) {
+      console.error('Classification failed:', err);
+      toast.error(err?.response?.data?.detail || 'Classification failed. Please try again.');
+    } finally {
       setClassLoading(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -202,17 +198,30 @@ export default function AIDemo() {
                     {t('aiDemo.configurePrediction')}
                   </h3>
                   <div className="space-y-4">
-                    <div>
-                      <label className="text-sm text-slate-400 mb-1.5 block">{t('aiDemo.restaurant')}</label>
-                      <select
-                        value={predForm.restaurant.id}
-                        onChange={(e) => setPredForm({ ...predForm, restaurant: RESTAURANTS_DEMO.find(r => r.id === Number(e.target.value))! })}
-                        className="input-field"
-                      >
-                        {RESTAURANTS_DEMO.map((r) => (
-                          <option key={r.id} value={r.id}>{r.name} (avg {r.base} kg/day)</option>
-                        ))}
-                      </select>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-sm text-slate-400 mb-1.5 block">Base Surplus (kg)</label>
+                        <input
+                          type="number"
+                          value={predForm.base_surplus_kg}
+                          onChange={(e) => setPredForm({ ...predForm, base_surplus_kg: Number(e.target.value) })}
+                          className="input-field"
+                          min={5}
+                          max={200}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm text-slate-400 mb-1.5 block">Cuisine</label>
+                        <select
+                          value={predForm.cuisine}
+                          onChange={(e) => setPredForm({ ...predForm, cuisine: e.target.value })}
+                          className="input-field"
+                        >
+                          {CUISINES.map((c) => (
+                            <option key={c} value={c}>{c.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -554,8 +563,10 @@ export default function AIDemo() {
                         ))}
                       </div>
 
-                      <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/10 text-sm text-slate-300">
-                        <span className="text-green-400 font-semibold">{t('aiDemo.autoTagged')}</span>
+                      <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/10 text-sm text-slate-300 space-y-1">
+                        <div><span className="text-green-400 font-semibold">Vegetarian:</span> {classResult.is_vegetarian ? '✅ Yes' : '❌ No'}</div>
+                        <div><span className="text-green-400 font-semibold">Shelf Life:</span> {classResult.shelf_life_hours} hours</div>
+                        <div><span className="text-green-400 font-semibold">Storage:</span> {classResult.storage_recommendation}</div>
                       </div>
                     </motion.div>
                   ) : (

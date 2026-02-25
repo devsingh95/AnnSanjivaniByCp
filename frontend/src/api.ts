@@ -58,13 +58,15 @@ export const mlAPI = {
   predictSurplus: (data: any) => api.post('/ml/predict-surplus', data),
   optimizeRoute: (data: any) => api.post('/ml/optimize-route', data),
   classifyFood: (description: string) =>
-    api.post(`/ml/classify-food?description=${encodeURIComponent(description)}`),
+    api.post('/ml/classify-food', { description }),
 };
 
 // Impact
 export const impactAPI = {
   dashboard: () => api.get('/impact/dashboard'),
   history: (days = 30) => api.get(`/impact/history?days=${days}`),
+  leaderboard: (entity = 'restaurant', limit = 5) =>
+    api.get(`/impact/leaderboard?entity=${entity}&limit=${limit}`),
 };
 
 // Tracking

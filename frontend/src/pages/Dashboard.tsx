@@ -20,35 +20,26 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = 
   cancelled: { label: 'Cancelled', color: 'badge-cancelled', icon: AlertCircle },
 };
 
-// Mock data for fallback
-const MOCK_IMPACT = {
-  total_kg_saved: 4850,
-  total_meals_served: 19400,
-  total_co2_saved_kg: 12125,
-  total_water_saved_liters: 4850000,
-  total_money_saved_inr: 485000,
-  active_restaurants: 10,
-  active_ngos: 8,
-  active_drivers: 12,
-  avg_delivery_time_mins: 28.5,
-  active_orders: 5,
-  today_kg_saved: 156.3,
-  today_meals: 782,
+// Empty defaults — real data loads from API
+const EMPTY_IMPACT = {
+  total_kg_saved: 0,
+  total_meals_served: 0,
+  total_co2_saved_kg: 0,
+  total_water_saved_liters: 0,
+  total_money_saved_inr: 0,
+  active_restaurants: 0,
+  active_ngos: 0,
+  active_drivers: 0,
+  avg_delivery_time_mins: 0,
+  active_orders: 0,
+  today_kg_saved: 0,
+  today_meals: 0,
 };
-
-const MOCK_ORDERS = [
-  { id: 1, food_description: 'Dal Makhani + Jeera Rice (50 servings)', quantity_kg: 25, status: 'in_transit', restaurant_name: 'Taj Palace Kitchen', ngo_name: 'Akshaya Patra Foundation', driver_name: 'Rajesh Kumar', eta_minutes: 12, distance_km: 5.2, created_at: new Date().toISOString() },
-  { id: 2, food_description: 'Paneer Butter Masala + Naan (30 servings)', quantity_kg: 15, status: 'picked_up', restaurant_name: 'Spice Garden', ngo_name: 'Robin Hood Army Mumbai', driver_name: 'Amit Sharma', eta_minutes: 22, distance_km: 8.1, created_at: new Date().toISOString() },
-  { id: 3, food_description: 'Chicken Biryani (40 servings)', quantity_kg: 20, status: 'assigned', restaurant_name: 'Royal Biryani Centre', ngo_name: 'Feeding India (Zomato)', driver_name: 'Suresh Patel', eta_minutes: 35, distance_km: 12.3, created_at: new Date().toISOString() },
-  { id: 4, food_description: 'Mixed Veg Thali (60 servings)', quantity_kg: 30, status: 'pending', restaurant_name: 'Green Leaf Restaurant', ngo_name: null, driver_name: null, eta_minutes: 0, distance_km: 0, created_at: new Date().toISOString() },
-  { id: 5, food_description: 'Pav Bhaji (35 servings)', quantity_kg: 12, status: 'delivered', restaurant_name: 'Mumbai Masala House', ngo_name: 'Roti Bank Mumbai', driver_name: 'Priya Singh', eta_minutes: 0, distance_km: 3.5, created_at: new Date().toISOString() },
-  { id: 6, food_description: 'Idli Sambar + Chutney (80 servings)', quantity_kg: 18, status: 'delivered', restaurant_name: 'Dosa Plaza Express', ngo_name: 'Mumbai Seva Foundation', driver_name: 'Vikram Yadav', eta_minutes: 0, distance_km: 6.7, created_at: new Date().toISOString() },
-];
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const [impact, setImpact] = useState(MOCK_IMPACT);
-  const [orders, setOrders] = useState(MOCK_ORDERS);
+  const [impact, setImpact] = useState(EMPTY_IMPACT);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -56,13 +47,13 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const [impactRes, ordersRes] = await Promise.all([
-          impactAPI.dashboard().catch(() => ({ data: MOCK_IMPACT })),
-          surplusAPI.list(undefined, 20).catch(() => ({ data: MOCK_ORDERS })),
+          impactAPI.dashboard(),
+          surplusAPI.list(undefined, 20),
         ]);
         setImpact(impactRes.data);
-        if (ordersRes.data.length > 0) setOrders(ordersRes.data);
+        setOrders(ordersRes.data || []);
       } catch {
-        // Use mock data
+        // Keep empty defaults on error
       } finally {
         setLoading(false);
       }
@@ -221,7 +212,12 @@ export default function Dashboard() {
                 </Link>
               </div>
               <div className="divide-y divide-white/5">
-                {orders.slice(0, 6).map((order, i) => {
+                {orders.length === 0 ? (
+                  <div className="p-8 text-center text-slate-500">
+                    <Package className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                    <p>{t('dashboard.noOrders') || 'No orders yet. Mark surplus food to get started!'}</p>
+                  </div>
+                ) : orders.slice(0, 6).map((order, i) => {
                   const status = STATUS_MAP[order.status] || STATUS_MAP.pending;
                   const StatusIcon = status.icon;
                   return (
