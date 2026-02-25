@@ -29,15 +29,17 @@ def main():
     else:
         print(f"  Error: {r.text[:200]}")
 
-    # 3. Create surplus
-    print("\n=== TEST 3: Create surplus ===")
+    # 3. Create surplus with temperature data
+    print("\n=== TEST 3: Create surplus with temperature ===")
     r = requests.post(f"{BASE}/surplus", json={
         "food_description": "Leftover Dal Rice",
         "quantity_kg": 10.0,
         "food_category": "rice",
         "expiry_hours": 4,
         "donor_lat": 19.076,
-        "donor_lng": 72.877
+        "donor_lng": 72.877,
+        "temperature_celsius": 72.5,
+        "food_condition": "hot"
     }, headers=headers)
     print(f"  Status: {r.status_code}")
     surplus = {}
@@ -45,12 +47,37 @@ def main():
         surplus = r.json()
         print(f"  Order ID: {surplus.get('id')}")
         print(f"  Status: {surplus.get('status')}")
+        print(f"  Temperature: {surplus.get('temperature_celsius')}°C")
+        print(f"  Food Condition: {surplus.get('food_condition')}")
+        print(f"  Temp OK: {surplus.get('temperature_ok')}")
+        print(f"  Temp Safety Alert: {surplus.get('temp_safety_alert')}")
         print(f"  NGO: {surplus.get('ngo_name')}")
         print(f"  Driver: {surplus.get('driver_name')}")
-        print(f"  ETA: {surplus.get('eta_minutes')} min")
-        print(f"  Distance: {surplus.get('distance_km')} km")
     else:
         print(f"  Error: {r.text[:300]}")
+
+    # 3b. Create surplus with UNSAFE temperature (cold food at 15°C)
+    print("\n=== TEST 3b: Create surplus with unsafe temperature ===")
+    r = requests.post(f"{BASE}/surplus", json={
+        "food_description": "Cold Raita and Salad",
+        "quantity_kg": 5.0,
+        "food_category": "veg",
+        "expiry_hours": 2,
+        "donor_lat": 19.076,
+        "donor_lng": 72.877,
+        "temperature_celsius": 15.0,
+        "food_condition": "cold"
+    }, headers=headers)
+    print(f"  Status: {r.status_code}")
+    if r.ok:
+        s2 = r.json()
+        print(f"  Order ID: {s2.get('id')}")
+        print(f"  Temperature: {s2.get('temperature_celsius')}°C")
+        print(f"  Food Condition: {s2.get('food_condition')}")
+        print(f"  Temp OK: {s2.get('temperature_ok')}")
+        print(f"  Temp Safety Alert: {s2.get('temp_safety_alert')} {'✓ CORRECT — unsafe temp detected!' if s2.get('temp_safety_alert') else '✗ WRONG — should be True'}")
+    else:
+        print(f"  Error: {r.text[:200]}")
 
     # 4. Get my orders
     print("\n=== TEST 4: My orders ===")

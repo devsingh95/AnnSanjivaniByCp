@@ -6,7 +6,7 @@ import {
   ArrowRight, Package, Leaf, TrendingUp, Truck,
   MapPin, HeartHandshake, Building2, Navigation,
   AlertTriangle, RefreshCcw, Eye,
-  Star, Timer,
+  Star, Timer, Thermometer, ShieldAlert,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
@@ -49,6 +49,8 @@ export default function SurplusPage() {
     food_category: 'mixed',
     expiry_hours: 2,
     photo_url: '',
+    temperature_celsius: '' as string | number,
+    food_condition: 'cooked' as string,
   });
   const [prediction, setPrediction] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -150,6 +152,8 @@ export default function SurplusPage() {
         food_category: form.food_category,
         expiry_hours: form.expiry_hours,
         photo_url: form.photo_url || undefined,
+        temperature_celsius: form.temperature_celsius !== '' ? Number(form.temperature_celsius) : undefined,
+        food_condition: form.food_condition,
       });
       const order = res.data;
       setActiveOrder(order);
@@ -173,7 +177,7 @@ export default function SurplusPage() {
   };
 
   const resetForm = () => {
-    setForm({ food_description: '', quantity_kg: 0, food_category: 'mixed', expiry_hours: 2, photo_url: '' });
+    setForm({ food_description: '', quantity_kg: 0, food_category: 'mixed', expiry_hours: 2, photo_url: '', temperature_celsius: '', food_condition: 'cooked' });
     setPrediction(null);
     setStep(1);
     setActiveOrder(null);
@@ -379,6 +383,43 @@ export default function SurplusPage() {
                             <option value="sweets">🍮 Sweets / Desserts</option>
                           </select>
                         </div>
+                        {/* Temperature & Food Condition */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-slate-300 mb-1.5 block flex items-center gap-1.5">
+                              <Thermometer className="w-4 h-4 text-red-400" /> Food Temperature (°C)
+                            </label>
+                            <input type="number" value={form.temperature_celsius} onChange={(e) => setForm({ ...form, temperature_celsius: e.target.value === '' ? '' : Number(e.target.value) })}
+                              className="input-field" placeholder="e.g., 72" step="0.1" />
+                            <p className="text-xs text-slate-500 mt-1">Hot food ≥ 65°C · Cold food ≤ 5°C</p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-slate-300 mb-1.5 block">Food Condition</label>
+                            <select value={form.food_condition} onChange={(e) => setForm({ ...form, food_condition: e.target.value })} className="input-field">
+                              <option value="cooked">🍳 Freshly Cooked</option>
+                              <option value="hot">🔥 Hot (above 65°C)</option>
+                              <option value="cold">❄️ Cold / Refrigerated</option>
+                              <option value="packaged">📦 Packaged</option>
+                            </select>
+                          </div>
+                        </div>
+                        {/* Temperature safety warning */}
+                        {form.temperature_celsius !== '' && (
+                          (form.food_condition === 'cold' && Number(form.temperature_celsius) > 5) ||
+                          (form.food_condition === 'hot' && Number(form.temperature_celsius) < 65)
+                        ) && (
+                          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-2">
+                            <ShieldAlert className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-semibold text-red-400">Temperature Safety Alert</p>
+                              <p className="text-xs text-red-300/70 mt-0.5">
+                                {form.food_condition === 'cold'
+                                  ? `Cold food should be ≤ 5°C but is ${form.temperature_celsius}°C. This may pose a food safety risk.`
+                                  : `Hot food should be ≥ 65°C but is ${form.temperature_celsius}°C. This may pose a food safety risk.`}
+                              </p>
+                            </div>
+                          </div>
+                        )}
                         <div>
                           <label className="text-sm font-medium text-slate-300 mb-1.5 block">{t('surplus.photoOptional')}</label>
                           <div className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-green-500/30 transition-colors cursor-pointer">
@@ -472,6 +513,8 @@ export default function SurplusPage() {
                           { label: t('surplus.qty'), value: `${form.quantity_kg} kg` },
                           { label: t('surplus.aiPredictedLabel'), value: `${prediction?.predicted_kg || '—'} kg`, color: 'text-violet-400' },
                           { label: t('surplus.expiryLabel'), value: `${form.expiry_hours} ${t('surplus.hours')}` },
+                          { label: '🌡️ Temperature', value: form.temperature_celsius !== '' ? `${form.temperature_celsius}°C` : 'Not recorded', color: form.temperature_celsius !== '' ? 'text-red-400' : 'text-slate-500' },
+                          { label: '📋 Food Condition', value: form.food_condition === 'hot' ? '🔥 Hot' : form.food_condition === 'cold' ? '❄️ Cold' : form.food_condition === 'packaged' ? '📦 Packaged' : '🍳 Cooked' },
                           { label: t('surplus.estMeals'), value: `~${form.quantity_kg * 4} meals`, color: 'text-green-400' },
                           { label: t('surplus.impactValue'), value: `₹${(form.quantity_kg * 100).toLocaleString()}`, color: 'text-amber-400' },
                         ].map((row, i) => (
@@ -583,8 +626,22 @@ export default function SurplusPage() {
                     </div>
                   </div>
 
+                  {/* Temperature Safety Alert */}
+                  {activeOrder.temp_safety_alert && (
+                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3 mb-6">
+                      <ShieldAlert className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-red-400">⚠️ Temperature Safety Alert</p>
+                        <p className="text-xs text-red-300/70 mt-0.5">
+                          Food temperature ({activeOrder.temperature_celsius}°C) is outside safe range for {activeOrder.food_condition || 'this'} food.
+                          NGOs and drivers have been notified.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Order Details Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                     <div className="glass-card p-4 text-center bg-gradient-to-br from-orange-500/10 to-amber-500/5 border-orange-500/20">
                       <Package className="w-5 h-5 text-orange-400 mx-auto mb-1" />
                       <div className="text-lg font-bold text-white">{activeOrder.quantity_kg} kg</div>
@@ -594,6 +651,15 @@ export default function SurplusPage() {
                       <Leaf className="w-5 h-5 text-green-400 mx-auto mb-1" />
                       <div className="text-lg font-bold text-white">~{activeOrder.servings || activeOrder.quantity_kg * 4}</div>
                       <div className="text-xs text-slate-500">Meals</div>
+                    </div>
+                    <div className={`glass-card p-4 text-center bg-gradient-to-br ${activeOrder.temp_safety_alert ? 'from-red-500/15 to-red-500/5 border-red-500/30' : 'from-red-500/10 to-orange-500/5 border-red-500/20'}`}>
+                      <Thermometer className={`w-5 h-5 mx-auto mb-1 ${activeOrder.temp_safety_alert ? 'text-red-400 animate-pulse' : 'text-red-400'}`} />
+                      <div className={`text-lg font-bold ${activeOrder.temp_safety_alert ? 'text-red-400' : 'text-white'}`}>
+                        {activeOrder.temperature_celsius != null ? `${activeOrder.temperature_celsius}°C` : '—'}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {activeOrder.food_condition === 'hot' ? '🔥 Hot' : activeOrder.food_condition === 'cold' ? '❄️ Cold' : activeOrder.food_condition === 'packaged' ? '📦 Packaged' : '🍳 Cooked'}
+                      </div>
                     </div>
                     <div className="glass-card p-4 text-center bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border-cyan-500/20">
                       <Clock className="w-5 h-5 text-cyan-400 mx-auto mb-1" />
@@ -791,8 +857,17 @@ export default function SurplusPage() {
                             <span className="text-xs text-slate-500">{order.created_at ? new Date(order.created_at).toLocaleDateString() : ''}</span>
                           </div>
                           <p className="text-sm text-white font-medium mb-2">{order.food_description}</p>
-                          <div className="flex items-center gap-4 text-xs text-slate-400 mb-3">
+                          <div className="flex items-center gap-4 text-xs text-slate-400 flex-wrap mb-3">
                             <span className="flex items-center gap-1"><Package className="w-3 h-3" /> {order.quantity_kg} kg</span>
+                            {order.temperature_celsius != null && (
+                              <span className={`flex items-center gap-1 ${order.temp_safety_alert ? 'text-red-400' : ''}`}>
+                                <Thermometer className="w-3 h-3" /> {order.temperature_celsius}°C
+                                {order.temp_safety_alert && <ShieldAlert className="w-3 h-3 text-red-400" />}
+                              </span>
+                            )}
+                            {order.food_condition && (
+                              <span className="capitalize">{order.food_condition === 'hot' ? '🔥' : order.food_condition === 'cold' ? '❄️' : order.food_condition === 'packaged' ? '📦' : '🍳'} {order.food_condition}</span>
+                            )}
                             {order.eta_minutes > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {order.eta_minutes} min</span>}
                             {order.distance_km > 0 && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {order.distance_km} km</span>}
                           </div>

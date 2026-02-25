@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   MapPin, Truck, Building2, HeartHandshake, Navigation, Package,
   Clock, RefreshCcw, Wifi, WifiOff, Star, CheckCircle2, ArrowRight,
+  Thermometer, ShieldAlert,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { trackingAPI, surplusAPI } from '../api';
@@ -253,6 +254,23 @@ export default function TrackingPage() {
                         <span className="text-xs text-slate-500">#{job.id}</span>
                       </div>
                       <p className="text-sm text-white font-medium mb-2">{job.food_description} ({job.quantity_kg} kg)</p>
+                      {/* Temperature & condition — visible for NGO transparency */}
+                      <div className="flex items-center gap-2 text-xs mb-2 flex-wrap">
+                        {job.temperature_celsius != null && (
+                          <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${job.temp_safety_alert ? 'bg-red-500/15 text-red-400' : 'bg-white/5 text-slate-300'}`}>
+                            <Thermometer className="w-3 h-3" /> {job.temperature_celsius}°C
+                            {job.temp_safety_alert && <ShieldAlert className="w-3 h-3" />}
+                          </span>
+                        )}
+                        {job.food_condition && (
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 text-slate-300 capitalize">
+                            {job.food_condition === 'hot' ? '🔥' : job.food_condition === 'cold' ? '❄️' : job.food_condition === 'packaged' ? '📦' : '🍳'} {job.food_condition}
+                          </span>
+                        )}
+                        {job.temperature_ok === false && (
+                          <span className="text-red-400 text-xs font-medium">⚠ Temp unsafe</span>
+                        )}
+                      </div>
                       <div className="space-y-2 text-xs">
                         <div className="flex items-center gap-2 text-orange-400"><Building2 className="w-3 h-3" /><span>{job.pickup?.name || 'Unknown'}</span></div>
                         <div className="flex items-center gap-2 text-green-400"><HeartHandshake className="w-3 h-3" /><span>{job.dropoff?.name || 'Unknown'}</span></div>
@@ -334,8 +352,19 @@ export default function TrackingPage() {
                           <span className="text-xs text-slate-500">{order.created_at ? new Date(order.created_at).toLocaleString() : ''}</span>
                         </div>
                         <p className="text-sm text-white mb-2">{order.food_description}</p>
-                        <div className="flex items-center gap-4 text-xs text-slate-400">
+                        <div className="flex items-center gap-4 text-xs text-slate-400 flex-wrap">
                           <span><Package className="w-3 h-3 inline mr-1" />{order.quantity_kg} kg</span>
+                          {order.temperature_celsius != null && (
+                            <span className={order.temp_safety_alert ? 'text-red-400' : ''}>
+                              <Thermometer className="w-3 h-3 inline mr-1" />{order.temperature_celsius}°C
+                              {order.temp_safety_alert && ' ⚠️'}
+                            </span>
+                          )}
+                          {order.food_condition && (
+                            <span className="capitalize">
+                              {order.food_condition === 'hot' ? '🔥' : order.food_condition === 'cold' ? '❄️' : order.food_condition === 'packaged' ? '📦' : '🍳'} {order.food_condition}
+                            </span>
+                          )}
                           {order.restaurant_name && <span><Building2 className="w-3 h-3 inline mr-1" />{order.restaurant_name}</span>}
                           {order.ngo_name && <span><HeartHandshake className="w-3 h-3 inline mr-1" />{order.ngo_name}</span>}
                           {order.driver_name && <span><Truck className="w-3 h-3 inline mr-1" />{order.driver_name}</span>}
