@@ -3,7 +3,6 @@ Food Rescue Platform — Application Settings
 Uses pydantic-settings for validation and .env support.
 """
 import os
-from typing import List
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
 
@@ -27,13 +26,12 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # ─── CORS ──────────────────────────────────────
-    ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-        "*",
-    ]
+    # Comma-separated string so Render env var works without JSON parsing
+    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000,*"
+
+    @property
+    def allowed_origins_list(self) -> list:
+        return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
 
     # ─── ML / AI ───────────────────────────────────
     ML_MODEL_PATH: str = "./models/"
@@ -68,17 +66,6 @@ class Settings(BaseSettings):
     # ─── Temperature Safety Thresholds ────────────
     TEMP_SAFE_COLD_MAX_C: float = 5.0   # Cold food must stay below 5°C
     TEMP_SAFE_HOT_MIN_C: float = 65.0   # Hot food must stay above 65°C
-
-    @field_validator("ALLOWED_ORIGINS", mode="before")
-    @classmethod
-    def parse_allowed_origins(cls, v):
-        if isinstance(v, str):
-            v = v.strip()
-            if v.startswith("["):
-                import json
-                return json.loads(v)
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return v
 
     @field_validator("DATABASE_URL")
     @classmethod
