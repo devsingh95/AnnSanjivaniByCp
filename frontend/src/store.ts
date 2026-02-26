@@ -15,24 +15,47 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  loading: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
   setUser: (user: User) => void;
+  setLoading: (v: boolean) => void;
 }
 
+// Safely parse stored user
+function loadStoredUser(): User | null {
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    localStorage.removeItem('user');
+    return null;
+  }
+}
+
+const storedToken = localStorage.getItem('token');
+const storedUser = loadStoredUser();
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
+  user: storedUser,
+  token: storedToken,
+  isAuthenticated: !!storedToken && !!storedUser,
+  loading: !!storedToken && !storedUser, // needs /me call
   login: (user, token) => {
     localStorage.setItem('token', token);
-    set({ user, token, isAuthenticated: true });
+    localStorage.setItem('user', JSON.stringify(user));
+    set({ user, token, isAuthenticated: true, loading: false });
   },
   logout: () => {
     localStorage.removeItem('token');
-    set({ user: null, token: null, isAuthenticated: false });
+    localStorage.removeItem('user');
+    set({ user: null, token: null, isAuthenticated: false, loading: false });
   },
-  setUser: (user) => set({ user }),
+  setUser: (user) => {
+    localStorage.setItem('user', JSON.stringify(user));
+    set({ user });
+  },
+  setLoading: (v) => set({ loading: v }),
 }));
 
 interface AppState {

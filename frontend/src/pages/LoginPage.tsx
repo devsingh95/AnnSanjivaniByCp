@@ -25,7 +25,14 @@ export default function LoginPage() {
       toast.success(`Welcome back, ${res.data.user.full_name}!`);
       navigate('/dashboard');
     } catch (err: any) {
-      toast.error(err?.response?.data?.detail || 'Login failed. Please check credentials.');
+      const detail = err?.response?.data?.detail;
+      const msg =
+        typeof detail === 'string'
+          ? detail
+          : Array.isArray(detail)
+            ? detail.map((d: any) => d.msg || d).join('; ')
+            : 'Login failed. Please check credentials.';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

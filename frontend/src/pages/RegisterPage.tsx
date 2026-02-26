@@ -30,12 +30,24 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await authAPI.register(form);
+      // Don't send empty phone — backend expects null or valid phone pattern
+      const payload = {
+        ...form,
+        phone: form.phone.trim() || undefined,
+      };
+      const res = await authAPI.register(payload);
       login(res.data.user, res.data.access_token);
       toast.success(`Welcome to Ann-Sanjivani AI, ${res.data.user.full_name}!`);
       navigate('/dashboard');
     } catch (err: any) {
-      toast.error(err?.response?.data?.detail || 'Registration failed.');
+      const detail = err?.response?.data?.detail;
+      const msg =
+        typeof detail === 'string'
+          ? detail
+          : Array.isArray(detail)
+            ? detail.map((d: any) => d.msg || d).join('; ')
+            : 'Registration failed. Please try again.';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

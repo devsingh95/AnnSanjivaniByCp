@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
@@ -8,8 +9,40 @@ import SurplusPage from './pages/SurplusPage';
 import TrackingPage from './pages/TrackingPage';
 import ImpactPage from './pages/ImpactPage';
 import AIDemo from './pages/AIDemo';
+import { useAuthStore } from './store';
+import { authAPI } from './api';
+
+/* Guard: redirect to /login when not authenticated */
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, loading } = useAuthStore();
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin" />
+      </div>
+    );
+  }
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+}
 
 function App() {
+  const { token, user, login, logout, setLoading } = useAuthStore();
+
+  /* Recover user profile on mount if we have a token but no user */
+  useEffect(() => {
+    if (token && !user) {
+      setLoading(true);
+      authAPI
+        .me()
+        .then((res) => {
+          login(res.data, token);
+        })
+        .catch(() => {
+          logout(); // token expired or invalid
+        });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <Router>
       <Toaster
@@ -34,11 +67,11 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/surplus" element={<SurplusPage />} />
-        <Route path="/tracking" element={<TrackingPage />} />
-        <Route path="/impact" element={<ImpactPage />} />
-        <Route path="/ai-demo" element={<AIDemo />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/surplus" element={<ProtectedRoute><SurplusPage /></ProtectedRoute>} />
+        <Route path="/tracking" element={<ProtectedRoute><TrackingPage /></ProtectedRoute>} />
+        <Route path="/impact" element={<ProtectedRoute><ImpactPage /></ProtectedRoute>} />
+        <Route path="/ai-demo" element={<ProtectedRoute><AIDemo /></ProtectedRoute>} />
       </Routes>
     </Router>
   );
