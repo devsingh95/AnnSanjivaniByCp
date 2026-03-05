@@ -14,5 +14,5 @@ services:
       - key: DEBUG
         value: "false"
       - key: ALLOWED_ORIGINS
-        value: "https://your-app.vercel.app,http://localhost:5173"
+        value: "https://ann-sanjivani-by-cp.vercel.app,http://localhost:5173,http://localhost:3000,*"
     plan: free

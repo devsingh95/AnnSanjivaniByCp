@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Utensils, Mail, Lock, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuthStore();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -23,7 +24,8 @@ export default function LoginPage() {
       const res = await authAPI.login(email, password);
       login(res.data.user, res.data.access_token);
       toast.success(`Welcome back, ${res.data.user.full_name}!`);
-      navigate('/dashboard');
+      const redirect = searchParams.get('redirect') || '/dashboard';
+      navigate(redirect);
     } catch (err: any) {
       const detail = err?.response?.data?.detail;
       const msg =

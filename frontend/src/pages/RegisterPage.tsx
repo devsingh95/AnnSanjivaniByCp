@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Utensils, Mail, Lock, User, Phone, ArrowRight, Building2, HeartHandshake, Truck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +24,7 @@ export default function RegisterPage() {
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuthStore();
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -38,7 +39,8 @@ export default function RegisterPage() {
       const res = await authAPI.register(payload);
       login(res.data.user, res.data.access_token);
       toast.success(`Welcome to Ann-Sanjivani AI, ${res.data.user.full_name}!`);
-      navigate('/dashboard');
+      const redirect = searchParams.get('redirect') || '/dashboard';
+      navigate(redirect);
     } catch (err: any) {
       const detail = err?.response?.data?.detail;
       const msg =
