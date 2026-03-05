@@ -18,6 +18,21 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Log errors for debugging
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      console.error(`[API] ${error.response.status}`, error.response.data);
+    } else if (error.request) {
+      console.error('[API] No response — backend may be down', error.message);
+    } else {
+      console.error('[API] Request error', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth
 export const authAPI = {
   login: (email: string, password: string) =>

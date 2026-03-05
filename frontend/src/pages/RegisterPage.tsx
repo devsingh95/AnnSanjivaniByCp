@@ -42,14 +42,18 @@ export default function RegisterPage() {
       const redirect = searchParams.get('redirect') || '/dashboard';
       navigate(redirect);
     } catch (err: any) {
-      const detail = err?.response?.data?.detail;
-      const msg =
-        typeof detail === 'string'
-          ? detail
-          : Array.isArray(detail)
-            ? detail.map((d: any) => d.msg || d).join('; ')
-            : 'Registration failed. Please try again.';
-      toast.error(msg);
+      if (!err.response) {
+        toast.error('Cannot connect to server. Make sure backend is running.');
+      } else {
+        const detail = err.response.data?.detail;
+        const msg =
+          typeof detail === 'string'
+            ? detail
+            : Array.isArray(detail)
+              ? detail.map((d: any) => d.msg || d).join('; ')
+              : `Registration failed (${err.response.status}). Please try again.`;
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
