@@ -27,31 +27,46 @@ export default function RegisterPage() {
   const [searchParams] = useSearchParams();
   const { login } = useAuthStore();
 
+  const [errorMsg, setErrorMsg] = useState('');
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg('');
     try {
       // Don't send empty phone — backend expects null or valid phone pattern
       const payload = {
         ...form,
         phone: form.phone.trim() || undefined,
       };
+      console.log('[Register] Sending:', { ...payload, password: '***' });
       const res = await authAPI.register(payload);
+      console.log('[Register] Success:', res.data.user.email);
       login(res.data.user, res.data.access_token);
       toast.success(`Welcome to Ann-Sanjivani AI, ${res.data.user.full_name}!`);
       const redirect = searchParams.get('redirect') || '/dashboard';
       navigate(redirect);
     } catch (err: any) {
+      console.error('[Register] Error:', err);
       if (!err.response) {
-        toast.error('Cannot connect to server. Make sure backend is running.');
+        const msg = 'Cannot connect to server. Make sure backend is running.';
+        setErrorMsg(msg);
+        toast.error(msg);
       } else {
         const detail = err.response.data?.detail;
-        const msg =
-          typeof detail === 'string'
-            ? detail
-            : Array.isArray(detail)
-              ? detail.map((d: any) => d.msg || d).join('; ')
-              : `Registration failed (${err.response.status}). Please try again.`;
+        let msg: string;
+        if (typeof detail === 'string') {
+          msg = detail;
+          // If email already registered, provide helpful message
+          if (detail.toLowerCase().includes('already registered')) {
+            msg = 'This email is already registered. Please login instead.';
+          }
+        } else if (Array.isArray(detail)) {
+          msg = detail.map((d: any) => d.msg || d).join('; ');
+        } else {
+          msg = `Registration failed (${err.response.status}). Please try again.`;
+        }
+        setErrorMsg(msg);
         toast.error(msg);
       }
     } finally {
@@ -166,6 +181,17 @@ export default function RegisterPage() {
               )}
             </button>
           </form>
+
+          {errorMsg && (
+            <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+              {errorMsg}
+              {errorMsg.toLowerCase().includes('already registered') && (
+                <Link to="/login" className="block mt-1 text-green-400 hover:text-green-300 font-medium underline">
+                  Go to Login →
+                </Link>
+              )}
+            </div>
+          )}
 
           <p className="text-center text-sm text-slate-500 mt-6">
             {t('auth.hasAccount')}{' '}

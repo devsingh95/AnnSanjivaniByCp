@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { login } = useAuthStore();
@@ -20,23 +21,32 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg('');
     try {
+      console.log('[Login] Attempting login for:', email);
       const res = await authAPI.login(email, password);
+      console.log('[Login] Success:', res.data.user.email);
       login(res.data.user, res.data.access_token);
       toast.success(`Welcome back, ${res.data.user.full_name}!`);
       const redirect = searchParams.get('redirect') || '/dashboard';
       navigate(redirect);
     } catch (err: any) {
+      console.error('[Login] Error:', err);
       if (!err.response) {
-        toast.error('Cannot connect to server. Make sure backend is running.');
+        const msg = 'Cannot connect to server. Make sure backend is running.';
+        setErrorMsg(msg);
+        toast.error(msg);
       } else {
         const detail = err.response.data?.detail;
-        const msg =
-          typeof detail === 'string'
-            ? detail
-            : Array.isArray(detail)
-              ? detail.map((d: any) => d.msg || d).join('; ')
-              : `Login failed (${err.response.status}). Please check credentials.`;
+        let msg: string;
+        if (typeof detail === 'string') {
+          msg = detail;
+        } else if (Array.isArray(detail)) {
+          msg = detail.map((d: any) => d.msg || d).join('; ');
+        } else {
+          msg = `Login failed (${err.response.status}). Please check credentials.`;
+        }
+        setErrorMsg(msg);
         toast.error(msg);
       }
     } finally {
@@ -122,6 +132,12 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          {errorMsg && (
+            <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+              {errorMsg}
+            </div>
+          )}
 
           <p className="text-center text-sm text-slate-500 mt-6">
             {t('auth.noAccount')}{' '}
